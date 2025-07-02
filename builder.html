@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Styles & Animations */
+        @keyframes bounce-in {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slide-in-right {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(0, 255, 255, 0); }
+        }
+        .animate-bounce-in { animation: bounce-in 0.5s ease-out; }
+        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+        .animate-slide-in-right { animation: slide-in-right 0.5s ease-out forwards; }
+        .section-highlight { animation: pulse-glow 1.5s ease-in-out 2; }
+
+        body {
+            background-color: #0a0a0a;
+            color: #e5e7eb;
+        }
+        .main-container {
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 1px 1px, rgba(200, 200, 200, 0.1) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        .card {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(55, 65, 81, 0.5);
+        }
+        select, input[type="text"], textarea {
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            transition: border-color 0.3s;
+        }
+        select:focus, input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #22d3ee;
+        }
+        .video-mode-element { display: block; }
+        .image-mode-element { display: none; }
+        body.image-mode .video-mode-element { display: none; }
+        body.image-mode .image-mode-element { display: block; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            transform: scale(1);
+        }
+        .btn:hover { transform: scale(1.05); }
+        .btn:active { transform: scale(0.95); }
+        .btn-primary { background: linear-gradient(to right, #22d3ee, #3b82f6); color: white; }
+        .btn-secondary { background: #4b5563; color: white; }
+        .btn-success { background: linear-gradient(to right, #34d399, #10b981); color: white; }
+        .btn-danger { background: linear-gradient(to right, #f87171, #ef4444); color: white; }
+        
+        /* Corrected Toast Initial State */
+        #toast {
+            transform: translate(-50%, 150%);
+        }
+    </style>
+</head>
+<body class="video-mode">
+
+    <div id="root" class="main-container container mx-auto px-4 py-6 max-w-7xl relative z-10">
+        <header class="card flex flex-col md:flex-row justify-between items-center p-8 mb-8 rounded-xl">
+            <div class="text-left mb-4 md:mb-0">
+                <h1 class="text-3xl md:text-4xl font-bold text-cyan-400 flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>
+                    AI Prompt Builder
+                </h1>
+                <p class="text-gray-300 text-sm mt-2">Build professional AI prompts for Video & Image with ease.</p>
+            </div>
+        </header>
+
+        <section class="card p-6 mb-6">
+            <h2 class="text-lg font-semibold text-yellow-400 flex items-center gap-3 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                Select Prompt Type
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button id="mode-video" class="mode-button relative p-6 rounded-xl border-2 transition-all duration-300 text-left border-transparent bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg scale-105">
+                     <div class="absolute top-3 right-3"><div class="w-3 h-3 bg-white rounded-full animate-pulse"></div></div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-white/20">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"></path><rect width="14" height="12" x="2" y="6" rx="2" ry="2"></rect></svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-lg mb-1">Video AI</h3>
+                            <p class="text-sm text-white/80">VEO, Runway, Pika</p>
+                        </div>
+                    </div>
+                </button>
+                <button id="mode-image" class="mode-button relative p-6 rounded-xl border-2 transition-all duration-300 text-left border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500 hover:bg-gray-700/70">
+                    <div class="flex items-start gap-4">
+                         <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-gray-600">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-lg mb-1">Image AI</h3>
+                            <p class="text-sm text-gray-400">DALL-E, Midjourney</p>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            <main class="xl:col-span-3 space-y-6">
+                <section id="character-section" class="card p-6">
+                    <h2 class="text-xl font-semibold text-yellow-400 mb-6 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Section 1 – Character & Emotion
+                    </h2>
+                    <div class="space-y-6">
+                        <div class="flex justify-center">
+                            <button id="auto-fill" class="btn btn-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"></path><path d="m18 2 4 4-4 4"></path><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"></path><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"></path><path d="m18 14 4 4-4 4"></path></svg>
+                                Auto Fill Random
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div>
+                                <label for="character" class="block text-sm font-medium text-gray-300">Main Character</label>
+                                <select id="character" class="w-full mt-2 px-4 py-3 rounded-lg text-white">
+                                    <option value="">-- Please Select --</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label for="verb" class="block text-sm font-medium text-gray-300">Action / Movement</label>
+                                <select id="verb" class="w-full mt-2 px-4 py-3 rounded-lg text-white">
+                                    <option value="">-- Please Select --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="emotion" class="block text-sm font-medium text-gray-300">Mood / Emotion</label>
+                                <select id="emotion" class="w-full mt-2 px-4 py-3 rounded-lg text-white">
+                                    <option value="">-- Please Select --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="location-section" class="card p-6">
+                     <h2 class="text-xl font-semibold text-yellow-400 mb-6 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        Section 2 – Location & Atmosphere
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                         <div>
+                            <label for="location" class="block text-sm font-medium text-gray-300">Scene Location</label>
+                            <select id="location" class="w-full mt-2 px-4 py-3 rounded-lg text-white">
+                                <option value="">-- Please Select --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="weather" class="block text-sm font-medium text-gray-300">Weather & Atmosphere</label>
+                            <select id="weather" class="w-full mt-2 px-4 py-3 rounded-lg text-white">
+                                <option value="">-- Please Select --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="environment" class="block text-sm font-medium text-gray-300">Environment (Details)</label>
+                            <input type="text" id="environment" placeholder="e.g. tall trees, misty air" class="w-full mt-2 px-4 py-3 rounded-lg text-white">
+                        </div>
+                    </div>
+                </section>
+
+                 <section id="camera-section" class="card p-6">
+                    <h2 class="text-xl font-semibold text-yellow-400 mb-6 flex items-center gap-2">
+                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
+                        Section 3 – Camera Technique
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+                         <div>
+                            <label for="camera" class="block text-sm font-medium text-gray-300">Camera Type</label>
+                            <select id="camera" class="w-full mt-2 px-4 py-3 rounded-lg text-white">
+                                <option value="">-- Please Select --</option>
+                            </select>
+                        </div>
+                        <div class="video-mode-element">
+                            <label for="motion" class="block text-sm font-medium text-gray-300">Camera Movement</label>
+                            <select id="motion" class="w-full mt-2 px-4 py-3 rounded-lg text-white">
+                                <option value="">-- Please Select --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="lighting" class="block text-sm font-medium text-gray-300">Lighting Style</label>
+                            <select id="lighting" class="w-full mt-2 px-4 py-3 rounded-lg text-white">
+                                <option value="">-- Please Select --</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="dialog-section" class="card p-6 video-mode-element">
+                    <h2 class="text-xl font-semibold text-yellow-400 mb-6 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Section 4 – Dialog & Speech
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="dialog" class="block text-sm font-medium text-gray-300">Dialog / Speech (Optional)</label>
+                            <textarea id="dialog" rows="3" placeholder="e.g. 'Hello, how are you?'" class="w-full mt-2 px-4 py-3 rounded-lg text-white"></textarea>
+                        </div>
+                         <div>
+                            <label for="dialogTone" class="block text-sm font-medium text-gray-300">Dialog Tone (Emotion)</label>
+                            <select id="dialogTone" class="w-full mt-2 px-4 py-3 rounded-lg text-white">
+                                <option value="">-- Please Select --</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+                
+                 <section id="result-section" class="card p-6">
+                    <h2 class="text-xl font-semibold text-yellow-400 mb-6 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>
+                        Section 5 – AI Prompt Result
+                    </h2>
+                    <div class="space-y-6">
+                        <div class="flex flex-wrap gap-4 justify-center">
+                            <button id="smart-prompt" class="btn btn-success">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
+                                 <span class="video-mode-element">Smart Video</span>
+                                 <span class="image-mode-element">Smart Image</span>
+                            </button>
+                             <button id="generate-prompt" class="btn btn-primary">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>
+                                <span class="video-mode-element">Generate Video Prompt</span>
+                                <span class="image-mode-element">Generate Image Prompt</span>
+                            </button>
+                        </div>
+                         <div class="flex flex-wrap gap-3 justify-center">
+                            <button id="copy-prompt" class="btn btn-secondary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                                Copy
+                            </button>
+                            <button id="reset-form" class="btn btn-danger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+                                Reset
+                            </button>
+                        </div>
+                        <div id="prompt-output-container" class="hidden">
+                            <pre id="prompt-output" class="whitespace-pre-wrap text-gray-100 font-mono text-sm leading-relaxed bg-gray-800 border border-gray-600 rounded-lg p-6"></pre>
+                        </div>
+                        
+                        <div id="toast" class="fixed bottom-5 left-1/2 bg-green-500 text-white py-2 px-4 rounded-xl shadow-lg transition-transform duration-300"></div>
+
+                    </div>
+                </section>
+            </main>
+
+            <aside class="xl:col-span-1 card p-6">
+                 <h2 class="text-xl font-semibold text-yellow-400 mb-6 flex items-center gap-2">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>
+                     Prompt History
+                </h2>
+                <div class="flex justify-between items-center mb-4">
+                    <span id="history-count" class="text-sm text-gray-400">0 prompts saved</span>
+                    <button id="clear-history" class="text-red-400 hover:text-red-300 text-sm flex items-center gap-1">
+                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                        Clear All
+                    </button>
+                </div>
+                <div id="history-list" class="space-y-2 max-h-96 overflow-y-auto">
+                    <p class="text-center text-gray-400 py-8">No prompts generated yet.</p>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <footer class="text-center py-8 px-4 text-gray-500 text-sm">
+        <p class="mb-2">Created by AdiAmir</p>
+        <p><strong>Disclaimer:</strong> AI-generated content can be unpredictable. Always review and refine prompts for best results. This tool is for educational and experimental purposes.</p>
+    </footer>
+
+<script>
+// --- DATA ---
+const characterData = [
+    { label: "Children", options: [{ value: "young child", label: "Young Child" }, { value: "playful boy", label: "Playful Boy" }] },
+    { label: "Teenagers", options: [{ value: "teenage boy", label: "Teenage Boy" }, { value: "high school athlete", label: "High School Athlete" }] },
+    { label: "Young Adults", options: [{ value: "college student", label: "College Student" }, { value: "startup founder", label: "Startup Founder" }] },
+    { label: "Professional Adults", options: [{ value: "businessman with suitcase", label: "Businessman" }, { value: "software developer", label: "Software Developer" }] },
+];
+const actionData = [
+    { label: "Children Actions", options: [{ value: "playing with toys", label: "Playing with toys" }, { value: "jumping excitedly", label: "Jumping excitedly" }] },
+    { label: "Teenager Actions", options: [{ value: "playing sports", label: "Playing sports" }, { value: "coding on laptop", label: "Coding on laptop" }] },
+    { label: "Young Adult Actions", options: [{ value: "studying textbooks", label: "Studying textbooks" }, { value: "pitching business idea", label: "Pitching business idea" }] },
+    { label: "Professional Actions", options: [{ value: "walking with briefcase", label: "Walking with briefcase" }, { value: "writing code", label: "Writing code" }] },
+];
+const emotionData = [
+    { value: "slightly happy", label: "Slightly Happy" }, { value: "very sad", label: "Very Sad" },
+    { value: "deeply angry", label: "Deeply Angry" }, { value: "intensely focused", label: "Intensely Focused" }
+];
+const locationData = [
+    { label: "Education", options: [{ value: "primary school classroom", label: "Primary School Classroom" }, { value: "university lecture hall", label: "University Lecture Hall" }] },
+    { label: "Office", options: [{ value: "modern office building", label: "Modern Office Building" }, { value: "startup office", label: "Startup Office" }] },
+    { label: "Nature", options: [{ value: "dense jungle", label: "Dense Jungle" }, { value: "village paddy field", label: "Village Paddy Field" }] },
+];
+const weatherData = [
+    { value: "sunset glow", label: "Sunset Glow" }, { value: "humid overcast", label: "Humid Overcast" },
+    { value: "clear full moon night", label: "Clear Full Moon Night" }, { value: "foggy morning", label: "Foggy Morning" }
+];
+const cameraData = [
+    { value: "Canon EOS R5", label: "Canon EOS R5" }, { value: "Sony A7S III", label: "Sony A7S III" },
+    { value: "iPhone 15 Pro Max", label: "iPhone 15 Pro Max" }, { value: "DJI Osmo Pocket 3", label: "DJI Osmo Pocket 3" }
+];
+const motionData = [
+    { value: "dolly in", label: "Dolly In" }, { value: "slow pan", label: "Slow Pan" },
+    { value: "handheld shaky", label: "Handheld Shaky" }, { value: "smooth tracking", label: "Smooth Tracking" }
+];
+const lightingData = [
+    { value: "Golden hour soft light", label: "Golden Hour Soft Light" }, { value: "Ambient candlelight", label: "Ambient Candlelight" },
+    { value: "Neon rim glow", label: "Neon Rim Glow" }, { value: "Natural window light", label: "Natural Window Light" }
+];
+const dialogToneData = [
+    { label: "Positive", options: [{ value: "cheerfully", label: "Cheerfully" }, { value: "excitedly", label: "Excitedly" }] },
+    { label: "Sad", options: [{ value: "sadly", label: "Sadly" }, { value: "tearfully", label: "Tearfully" }] },
+    { label: "Angry", options: [{ value: "angrily", label: "Angrily" }, { value: "furiously", label: "Furiously" }] },
+];
+const smartPromptData = {
+    "young child": { verb: "jumping excitedly", emotion: "slightly happy", location: "neighborhood park", weather: "sunny afternoon", camera: "iPhone 15 Pro Max", lighting: "Golden hour soft light", motion: "handheld shaky", dialog: "Look mommy!", dialogTone: "excitedly" },
+    "businessman with suitcase": { verb: "walking with briefcase", emotion: "intensely focused", location: "modern office building", weather: "overcast dusk", camera: "Sony A7S III", lighting: "Natural window light", motion: "smooth tracking", dialog: "The deal is crucial.", dialogTone: "seriously" }
+};
+
+// --- DOM ELEMENTS ---
+const DOMElements = {
+    character: document.getElementById('character'),
+    verb: document.getElementById('verb'),
+    emotion: document.getElementById('emotion'),
+    location: document.getElementById('location'),
+    weather: document.getElementById('weather'),
+    environment: document.getElementById('environment'),
+    camera: document.getElementById('camera'),
+    motion: document.getElementById('motion'),
+    lighting: document.getElementById('lighting'),
+    dialog: document.getElementById('dialog'),
+    dialogTone: document.getElementById('dialogTone'),
+    
+    modeVideoBtn: document.getElementById('mode-video'),
+    modeImageBtn: document.getElementById('mode-image'),
+
+    autoFillBtn: document.getElementById('auto-fill'),
+    generateBtn: document.getElementById('generate-prompt'),
+    smartPromptBtn: document.getElementById('smart-prompt'),
+    copyBtn: document.getElementById('copy-prompt'),
+    resetBtn: document.getElementById('reset-form'),
+
+    promptOutputContainer: document.getElementById('prompt-output-container'),
+    promptOutput: document.getElementById('prompt-output'),
+    toast: document.getElementById('toast'),
+    
+    historyList: document.getElementById('history-list'),
+    historyCount: document.getElementById('history-count'),
+    clearHistoryBtn: document.getElementById('clear-history'),
+};
+
+// --- STATE ---
+let state = {
+    mode: 'video', // 'video' or 'image'
+    history: [],
+};
+
+// --- UTILITY FUNCTIONS ---
+function populateSelect(selectElement, data, placeholder) {
+    selectElement.innerHTML = `<option value="">${placeholder || '-- Please Select --'}</option>`;
+    data.forEach(group => {
+        if (group.options) {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = group.label;
+            group.options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option.value;
+                opt.textContent = option.label;
+                optgroup.appendChild(opt);
+            });
+            selectElement.appendChild(optgroup);
+        } else {
+            const opt = document.createElement('option');
+            opt.value = group.value;
+            opt.textContent = group.label;
+            selectElement.appendChild(opt);
+        }
+    });
+}
+
+// CORRECTED: showToast function for bottom-center animation
+function showToast(message) {
+    const { toast } = DOMElements;
+    toast.textContent = message;
+    // Animate in (slide up)
+    toast.style.transform = 'translate(-50%, 0)';
+    toast.style.opacity = '1';
+    
+    // Animate out (slide down) after 3 seconds
+    setTimeout(() => {
+        toast.style.transform = 'translate(-50%, 150%)';
+        toast.style.opacity = '0';
+    }, 3000);
+}
+
+
+function getRandomOption(data) {
+    if (data[0].options) {
+        const allOptions = data.flatMap(group => group.options);
+        return allOptions[Math.floor(Math.random() * allOptions.length)].value;
+    }
+    return data[Math.floor(Math.random() * data.length)].value;
+}
+
+// --- HISTORY FUNCTIONS ---
+function renderHistory() {
+    const { historyList, historyCount } = DOMElements;
+    historyList.innerHTML = '';
+
+    if (state.history.length === 0) {
+        historyList.innerHTML = '<p class="text-center text-gray-400 py-8">No prompts generated yet.</p>';
+    } else {
+        state.history.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-700/50 border border-gray-600 rounded-lg p-3';
+            div.innerHTML = `
+                <div class="flex items-start justify-between gap-2 mb-2">
+                    <span class="text-xs px-2 py-1 rounded ${item.type === 'smart' ? 'bg-green-600/20 text-green-400' : 'bg-purple-600/20 text-purple-400'}">${item.type === 'smart' ? '🚀 Smart' : '📝 Manual'}</span>
+                    <div class="flex items-center gap-1">
+                        <button class="copy-history-btn p-1 rounded hover:bg-gray-600 text-gray-400 hover:text-cyan-400" data-prompt="${item.prompt}" title="Copy"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button>
+                        <button class="delete-history-btn p-1 rounded hover:bg-gray-600 text-gray-400 hover:text-red-400" data-id="${item.id}" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg></button>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-300 line-clamp-3">${item.prompt}</p>
+            `;
+            historyList.appendChild(div);
+        });
+    }
+    historyCount.textContent = `${state.history.length} prompts saved`;
+    saveHistory();
+}
+
+function addToHistory(prompt, type) {
+    const newItem = { id: Date.now(), prompt, type };
+    state.history.unshift(newItem);
+    if (state.history.length > 20) {
+        state.history.pop();
+    }
+    renderHistory();
+}
+
+function saveHistory() {
+    localStorage.setItem('ai-prompt-builder-history', JSON.stringify(state.history));
+}
+
+function loadHistory() {
+    const history = localStorage.getItem('ai-prompt-builder-history');
+    if (history) {
+        state.history = JSON.parse(history);
+        renderHistory();
+    }
+}
+
+// --- CORE LOGIC ---
+function generatePromptText() {
+    const { character, verb, emotion, location, weather, environment, camera, motion, lighting, dialog, dialogTone } = DOMElements;
+    
+    let parts = [];
+    
+    const mainAction = [character.value, verb.value, emotion.value].filter(Boolean).join(' ');
+    if (mainAction) parts.push(mainAction);
+
+    if (state.mode === 'video' && dialog.value) {
+        let dialogPart = `saying "${dialog.value}"`;
+        if (dialogTone.value) {
+            dialogPart += ` ${dialogTone.value}`;
+        }
+        parts.push(dialogPart);
+    }
+
+    const scene = [
+        location.value ? `in ${location.value}` : '',
+        weather.value ? `during ${weather.value}` : '',
+        environment.value ? `with ${environment.value}` : ''
+    ].filter(Boolean).join(', ');
+    if (scene) parts.push(scene);
+
+    const tech = [
+        camera.value ? `shot with ${camera.value}` : '',
+        state.mode === 'video' && motion.value ? `${motion.value} camera movement` : '',
+        lighting.value ? `${lighting.value.toLowerCase()}` : '',
+    ].filter(Boolean).join(', ');
+    if (tech) parts.push(tech);
+
+    return parts.join(', ');
+}
+
+function handleGeneratePrompt(type, smartData = null) {
+    const promptText = smartData ? smartData : generatePromptText();
+
+    if (!promptText) {
+        showToast("Please fill in some fields first!");
+        return;
+    }
+
+    const { promptOutputContainer, promptOutput } = DOMElements;
+    promptOutput.textContent = promptText;
+    promptOutputContainer.classList.remove('hidden');
+    
+    addToHistory(promptText, type);
+    showToast("Prompt generated successfully!");
+}
+
+function handleSmartPrompt() {
+    const { character } = DOMElements;
+    if (!character.value) {
+        showToast("Please select a character first!");
+        return;
+    }
+    const data = smartPromptData[character.value] || Object.values(smartPromptData)[0];
+    const smartParts = [
+        `${character.value} ${data.verb} ${data.emotion}`,
+        `in ${data.location} during ${data.weather}`,
+        state.mode === 'video' ? `saying "${data.dialog}" ${data.dialogTone}` : '',
+        `shot with ${data.camera}, ${data.lighting.toLowerCase()}`,
+        state.mode === 'video' ? `${data.motion} camera movement` : '',
+    ].filter(Boolean);
+    
+    handleGeneratePrompt('smart', smartParts.join(', '));
+}
+
+function resetForm() {
+    const { character, verb, emotion, location, weather, environment, camera, motion, lighting, dialog, dialogTone, promptOutputContainer } = DOMElements;
+    const elementsToReset = [character, verb, emotion, location, weather, camera, motion, lighting, dialog, dialogTone];
+    elementsToReset.forEach(el => el.value = '');
+    environment.value = '';
+    promptOutputContainer.classList.add('hidden');
+    showToast("Form has been reset!");
+}
+
+function handleAutoFill() {
+    const { character, verb, emotion, location, weather, camera, motion, lighting, dialogTone } = DOMElements;
+    character.value = getRandomOption(characterData);
+    verb.value = getRandomOption(actionData);
+    emotion.value = getRandomOption(emotionData);
+    location.value = getRandomOption(locationData);
+    weather.value = getRandomOption(weatherData);
+    camera.value = getRandomOption(cameraData);
+    motion.value = getRandomOption(motionData);
+    lighting.value = getRandomOption(lightingData);
+    dialogTone.value = getRandomOption(dialogToneData);
+    showToast("Form filled with random data!");
+}
+
+function setMode(newMode) {
+    state.mode = newMode;
+    const { modeVideoBtn, modeImageBtn } = DOMElements;
+    if (newMode === 'video') {
+        document.body.classList.remove('image-mode');
+        document.body.classList.add('video-mode');
+        modeVideoBtn.classList.remove('border-gray-600', 'bg-gray-700/50', 'text-gray-300', 'hover:border-gray-500');
+        modeVideoBtn.classList.add('border-transparent', 'bg-gradient-to-r', 'from-purple-500', 'to-indigo-600', 'text-white', 'scale-105');
+        modeImageBtn.classList.add('border-gray-600', 'bg-gray-700/50', 'text-gray-300', 'hover:border-gray-500');
+        modeImageBtn.classList.remove('border-transparent', 'bg-gradient-to-r', 'from-green-500', 'to-emerald-600', 'text-white', 'scale-105');
+    } else {
+        document.body.classList.remove('video-mode');
+        document.body.classList.add('image-mode');
+        modeImageBtn.classList.remove('border-gray-600', 'bg-gray-700/50', 'text-gray-300', 'hover:border-gray-500');
+        modeImageBtn.classList.add('border-transparent', 'bg-gradient-to-r', 'from-green-500', 'to-emerald-600', 'text-white', 'scale-105');
+        modeVideoBtn.classList.add('border-gray-600', 'bg-gray-700/50', 'text-gray-300', 'hover:border-gray-500');
+        modeVideoBtn.classList.remove('border-transparent', 'bg-gradient-to-r', 'from-purple-500', 'to-indigo-600', 'text-white', 'scale-105');
+    }
+}
+
+
+// --- INITIALIZATION ---
+function initialize() {
+    // Populate dropdowns
+    populateSelect(DOMElements.character, characterData);
+    populateSelect(DOMElements.verb, actionData);
+    populateSelect(DOMElements.emotion, emotionData);
+    populateSelect(DOMElements.location, locationData);
+    populateSelect(DOMElements.weather, weatherData);
+    populateSelect(DOMElements.camera, cameraData);
+    populateSelect(DOMElements.motion, motionData);
+    populateSelect(DOMElements.lighting, lightingData);
+    populateSelect(DOMElements.dialogTone, dialogToneData);
+
+    // Load history
+    loadHistory();
+
+    // Attach event listeners
+    DOMElements.generateBtn.addEventListener('click', () => handleGeneratePrompt('manual'));
+    DOMElements.smartPromptBtn.addEventListener('click', handleSmartPrompt);
+    DOMElements.resetBtn.addEventListener('click', resetForm);
+    DOMElements.autoFillBtn.addEventListener('click', handleAutoFill);
+
+    DOMElements.copyBtn.addEventListener('click', () => {
+        const textToCopy = DOMElements.promptOutput.textContent;
+        if (textToCopy) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast("Copied to clipboard!");
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast("Failed to copy!");
+            });
+        }
+    });
+    
+    DOMElements.modeVideoBtn.addEventListener('click', () => setMode('video'));
+    DOMElements.modeImageBtn.addEventListener('click', () => setMode('image'));
+
+    DOMElements.clearHistoryBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to clear all history?')) {
+            state.history = [];
+            renderHistory();
+        }
+    });
+
+    DOMElements.historyList.addEventListener('click', (e) => {
+        const copyBtn = e.target.closest('.copy-history-btn');
+        const deleteBtn = e.target.closest('.delete-history-btn');
+        if (copyBtn) {
+            const prompt = copyBtn.dataset.prompt;
+            navigator.clipboard.writeText(prompt).then(() => showToast("Copied from history!"));
+        }
+        if (deleteBtn) {
+            const id = parseInt(deleteBtn.dataset.id, 10);
+            state.history = state.history.filter(item => item.id !== id);
+            renderHistory();
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initialize);
+</script>
+
+</body>
+</html>
