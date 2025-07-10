@@ -1,1 +1,602 @@
-fdaf
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Template Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        /* Glassmorphism Card */
+        .card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            @apply rounded-2xl shadow-2xl;
+        }
+
+        /* Trendy Input Fields */
+        .form-group {
+            position: relative;
+        }
+        .form-input, .form-textarea, .form-select {
+            @apply w-full px-4 py-3 bg-white/50 border-2 border-transparent text-gray-800 rounded-lg transition duration-300 ease-in-out;
+            @apply focus:outline-none focus:border-teal-400 focus:bg-white;
+        }
+        .form-input:focus + .form-label, .form-input:not(:placeholder-shown) + .form-label,
+        .form-textarea:focus + .form-label, .form-textarea:not(:placeholder-shown) + .form-label {
+            @apply -top-3 text-xs font-semibold text-teal-600;
+        }
+        .form-label {
+            @apply absolute left-4 top-3 text-gray-500 transition-all duration-300 ease-in-out pointer-events-none;
+        }
+        select.form-select {
+            @apply bg-white/50;
+        }
+
+        /* Figma-Inspired 3D Gradient Buttons */
+        .btn {
+            @apply inline-flex items-center justify-center px-6 py-3 font-bold tracking-wide text-white uppercase rounded-lg shadow-lg transition-all duration-200 ease-in-out;
+            @apply focus:outline-none focus:ring-4 focus:ring-offset-2;
+            border: none;
+            transform-style: preserve-3d;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #2dd4bf 0%, #3b82f6 100%);
+            box-shadow: 0 4px 0 0 #0d9488, 0 6px 12px rgba(0,0,0,0.2);
+            @apply focus:ring-teal-300;
+        }
+        .btn-secondary {
+            background: linear-gradient(45deg, #6b7280 0%, #4b5563 100%);
+            box-shadow: 0 4px 0 0 #374151, 0 6px 12px rgba(0,0,0,0.2);
+            @apply focus:ring-gray-400;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 0 #0d9488, 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .btn-secondary:active { box-shadow: 0 2px 0 0 #374151, 0 4px 8px rgba(0,0,0,0.2); }
+
+
+        #prompt-output {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+    </style>
+</head>
+<body class="text-gray-900">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">
+                Prompt Studio
+            </h1>
+            <p class="mt-3 text-lg text-gray-700">Visually craft perfect AI prompts in seconds.</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="card p-6 md:p-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                
+                <!-- Left Column: User Input -->
+                <div>
+                    <h2 class="text-3xl font-semibold mb-6 text-gray-800">1. Define Your Task</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <!-- Category Selection -->
+                        <div class="form-group">
+                            <select id="category-select" class="form-select"></select>
+                            <label class="form-label static -top-3 text-xs font-semibold text-teal-600">Category</label>
+                        </div>
+                        <!-- Template Selection -->
+                        <div class="form-group">
+                            <select id="template-select" class="form-select"></select>
+                             <label class="form-label static -top-3 text-xs font-semibold text-teal-600">Template</label>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Form -->
+                    <div id="dynamic-form-container">
+                        <h2 class="text-3xl font-semibold mb-6 text-gray-800">2. Provide Context</h2>
+                        <div id="dynamic-form" class="space-y-6">
+                            <!-- Input fields will be dynamically inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Generated Prompt -->
+                <div>
+                    <h2 class="text-3xl font-semibold mb-6 text-gray-800">3. Get Your Prompt</h2>
+                    
+                    <!-- Prompt Output -->
+                    <div class="bg-white/70 p-4 rounded-lg border border-gray-200 min-h-[300px] mb-6 shadow-inner">
+                        <pre id="prompt-output" class="text-sm text-gray-800 leading-relaxed"></pre>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
+                        <button id="copy-btn" class="btn btn-primary w-full"><span class="material-icons mr-2">content_copy</span>Copy</button>
+                        <button id="why-btn" class="btn btn-secondary w-full"><span class="material-icons mr-2">lightbulb</span>Why it works</button>
+                    </div>
+
+                    <!-- Explanation Section -->
+                    <div id="explanation-container" class="hidden bg-blue-50 border-l-4 border-blue-500 text-blue-800 p-4 rounded-r-lg">
+                        <h3 class="font-bold mb-2">The Anatomy of a Great Prompt</h3>
+                        <p id="explanation-text" class="text-sm"></p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center mt-12 text-gray-600">
+            <p>&copy; 2025 Prompt Studio. A Trendy Figma-Inspired Design.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA STORE for Templates (Expanded) ---
+            const templates = {
+                "Marketing & Sales": {
+                    "Product Description": {
+                        persona: "Expert Ecommerce Copywriter",
+                        task: "Write a compelling and persuasive product description.",
+                        explanation: "By assigning the 'Expert Copywriter' persona, we tell the AI to use persuasive language. Providing clear features and a target audience ensures the output is focused and relevant.",
+                        fields: [
+                            { id: "productName", label: "Product Name", type: "text", placeholder: "e.g., The Nomad's Brew Mug" },
+                            { id: "productDetails", label: "Product Details & Materials", type: "textarea", placeholder: "e.g., A reusable, 12oz insulated coffee mug made from recycled stainless steel with a ceramic lining." },
+                            { id: "targetAudience", label: "Target Audience", type: "text", placeholder: "e.g., Eco-conscious millennials who love travel" },
+                            { id: "keyFeatures", label: "Key Features (one per line)", type: "textarea", placeholder: "e.g., Keeps drinks hot for 12 hours\nLeak-proof lid\nBPA-free\nFits in car cup holders" },
+                            { id: "tone", label: "Tone", type: "text", placeholder: "e.g., Enthusiastic and inspiring" }
+                        ],
+                        skeleton: `Act as an {{persona}}. Your task is to {{task}}. **Product Information:** - Name: {{productName}} - Details: {{productDetails}} **Audience & Tone:** - Target Audience: {{targetAudience}} - Desired Tone: {{tone}} **Core Requirements:** - Highlight these key features clearly in the description:\n{{keyFeatures}}\n- The final output should be a single block of text. Do not use bullet points in the final description itself.`
+                    },
+                    "Brainstorm Taglines": {
+                        persona: "Creative Branding Strategist",
+                        task: "Brainstorm a list of 10 catchy and memorable taglines.",
+                        explanation: "This prompt works well because it requests a specific number of ideas (10) and defines the brand's core values, giving the AI creative yet relevant boundaries to work within.",
+                        fields: [
+                            { id: "companyName", label: "Company/Product Name", type: "text", placeholder: "e.g., QuickNote AI" },
+                            { id: "coreValues", label: "Core Values / What it does", type: "textarea", placeholder: "e.g., An AI-powered note-taking app that organizes thoughts instantly using mind maps." },
+                            { id: "targetAudience", label: "Target Audience", type: "text", placeholder: "e.g., Busy professionals, students, and writers" },
+                            { id: "tone", label: "Desired Tone", type: "text", placeholder: "e.g., Modern, witty, and intelligent" }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}} for a company with the following profile: **Company Profile:** - Name: {{companyName}} - What it does: {{coreValues}} - Target Audience: {{targetAudience}} - Desired Tone: {{tone}} Please provide the 10 taglines in a numbered list.`
+                    },
+                    "Social Media Post": {
+                        persona: "Viral Social Media Manager",
+                        task: "Create an engaging social media post.",
+                        explanation: "Specifying the platform is key, as tone and format vary greatly. Including a clear call to action (CTA) tells the AI what you want the audience to do next.",
+                        fields: [
+                            { id: "platform", label: "Platform", type: "text", placeholder: "e.g., Twitter, Instagram, LinkedIn" },
+                            { id: "topic", label: "Topic of the Post", type: "text", placeholder: "e.g., Announcing our new summer sale" },
+                            { id: "keyMessage", label: "Key Message", type: "textarea", placeholder: "e.g., Everything is 20% off for the next 48 hours. Use code SUMMER20." },
+                            { id: "cta", label: "Call to Action", type: "text", placeholder: "e.g., Shop now, link in bio" },
+                            { id: "hashtags", label: "Relevant Hashtags (comma separated)", type: "text", placeholder: "e.g., #sale, #summer, #discount" }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}} for the {{platform}} platform. **Post Details:** - Topic: {{topic}} - Key Message: {{keyMessage}} - Call to Action: {{cta}} **Requirements:** - The tone should be exciting and urgent. - Include 3-5 relevant hashtags based on these keywords: {{hashtags}}. - If for Instagram, suggest an image idea.`
+                    },
+                    "Promotional Email": {
+                        persona: "Direct Response Email Marketer",
+                        task: "Write a high-converting promotional email.",
+                        explanation: "A great marketing email needs a killer subject line. By making it a specific field, we ensure the AI focuses on this critical element.",
+                        fields: [
+                            { id: "product", label: "Product/Service being promoted", type: "text", placeholder: "e.g., Our new 'Focus' productivity course" },
+                            { id: "subjectLine", label: "Email Subject Line Idea", type: "text", placeholder: "e.g., Stop procrastinating, start achieving" },
+                            { id: "targetAudience", label: "Target Audience", type: "text", placeholder: "e.g., Freelancers and remote workers" },
+                            { id: "offer", label: "The Specific Offer", type: "text", placeholder: "e.g., 50% off for the first 100 sign-ups" },
+                            { id: "cta", label: "Call to Action", type: "text", placeholder: "e.g., 'Enroll Now and Transform Your Workflow'" }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}}. **Email Details:** - Product: {{product}} - Target Audience: {{targetAudience}} - The Offer: {{offer}} - Call to Action Button Text: {{cta}} **Content:** - Start with the subject line: "{{subjectLine}}". - Write a compelling email body that explains the benefits, details the offer, and drives readers to click the call to action. - Keep the tone persuasive and benefit-driven.`
+                    },
+                    "A/B Test Copy": {
+                        persona: "Conversion Rate Optimization Specialist",
+                        task: "Write two different versions of ad copy to A/B test.",
+                        explanation: "This template explicitly asks for two variations (A and B) and a hypothesis, forcing the AI to think like a tester and create meaningfully different copy.",
+                        fields: [
+                            { id: "product", label: "Product/Service", type: "text", placeholder: "e.g., 'SaaS for project management'" },
+                            { id: "channel", label: "Advertising Channel", type: "text", placeholder: "e.g., Facebook Ad, Google Ad Headline" },
+                            { id: "angleA", label: "Angle for Version A", type: "text", placeholder: "e.g., Focus on saving time" },
+                            { id: "angleB", label: "Angle for Version B", type: "text", placeholder: "e.g., Focus on team collaboration" }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}} for a {{channel}}. **Test Details:** - Product: {{product}} **Version A:** - Write a version of the ad copy that focuses on {{angleA}}. **Version B:** - Write a different version of the ad copy that focuses on {{angleB}}. **Hypothesis:** - Briefly state the hypothesis for this A/B test. Present the output with clear "Version A" and "Version B" headings.`
+                    }
+                },
+                "Academic & Education": {
+                    "Lesson Plan Creator": {
+                        persona: "Socratic Tutor and Curriculum Designer",
+                        task: "Generate a detailed lesson plan.",
+                        explanation: "This template structures the request with clear sections like 'Objectives' and 'Assessment', guiding the AI to produce a well-organized and practical lesson plan that educators can use.",
+                        fields: [
+                            { id: "subject", label: "Subject", type: "text", placeholder: "e.g., High School Biology" },
+                            { id: "topic", label: "Lesson Topic", type: "text", placeholder: "e.g., The Process of Photosynthesis" },
+                            { id: "gradeLevel", label: "Grade Level", type: "text", placeholder: "e.g., 10th Grade" },
+                            { id: "duration", label: "Lesson Duration", type: "text", placeholder: "e.g., 45 minutes" },
+                            { id: "learningObjectives", label: "Learning Objectives (one per line)", type: "textarea", placeholder: "e.g., Define photosynthesis.\nIdentify the reactants and products." }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your primary task is to {{task}}. **Context:** - Subject: {{subject}} - Topic: {{topic}} - Grade Level: {{gradeLevel}} - Lesson Duration: {{duration}} **Core Requirements:** The lesson plan must be structured to achieve the following learning objectives:\n{{learningObjectives}} **Format:** Please structure the output in Markdown with the following sections: 1. **Lesson Title** 2. **Learning Objectives** 3. **Materials Needed** 4. **Lesson Procedure** (a step-by-step timeline) 5. **Assessment** 6. **Differentiation** (for struggling and advanced students).`
+                    },
+                    "Essay Outline": {
+                        persona: "University Professor of Composition",
+                        task: "Create a detailed, 5-paragraph essay outline.",
+                        explanation: "By specifying the structure (5 paragraphs) and requiring a thesis statement, this prompt ensures the AI generates a useful and conventional outline for students.",
+                        fields: [
+                            { id: "topic", label: "Essay Topic", type: "text", placeholder: "e.g., The impact of social media on modern politics" },
+                            { id: "thesis", label: "Thesis Statement Idea", type: "text", placeholder: "e.g., Social media has both democratized and polarized political discourse." },
+                            { id: "point1", label: "Main Point for Body Paragraph 1", type: "text", placeholder: "e.g., Increased citizen engagement and access to information." },
+                            { id: "point2", label: "Main Point for Body Paragraph 2", type: "text", placeholder: "e.g., The rise of misinformation and filter bubbles." },
+                            { id: "point3", label: "Main Point for Body Paragraph 3", type: "text", placeholder: "e.g., The role of algorithms in shaping public opinion." }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}} on the topic of "{{topic}}". **Outline Structure:** **I. Introduction** - A. Hook - B. Background Information - C. Thesis Statement: "{{thesis}}" **II. Body Paragraph 1** - A. Topic Sentence: {{point1}} - B. Supporting Evidence 1 - C. Supporting Evidence 2 **III. Body Paragraph 2** - A. Topic Sentence: {{point2}} - B. Supporting Evidence 1 - C. Supporting Evidence 2 **IV. Body Paragraph 3** - A. Topic Sentence: {{point3}} - B. Supporting Evidence 1 - C. Supporting Evidence 2 **V. Conclusion** - A. Restate Thesis - B. Summarize Main Points - C. Concluding Thought. Flesh out each section briefly.`
+                    },
+                    "Study Guide Generator": {
+                        persona: "Dedicated Academic Tutor",
+                        task: "Generate a study guide for an upcoming test.",
+                        explanation: "This template turns a large amount of text into a structured study tool, focusing on key terms and big-picture questions, which is more effective than just re-reading notes.",
+                        fields: [
+                            { id: "subject", label: "Subject", type: "text", placeholder: "e.g., World History" },
+                            { id: "topics", label: "Topics Covered on the Test (one per line)", type: "textarea", placeholder: "e.g., The Roman Empire\nThe Silk Road\nThe Middle Ages" },
+                            { id: "notes", label: "Paste Your Class Notes or Text Here", type: "textarea", placeholder: "The Roman Empire was founded in..." }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}} on {{subject}}. **Source Material:** Based on the following notes, please generate the study guide:\n{{notes}}\n\n**Format:** Create a guide with these sections for the topics of {{topics}}: 1. **Key Terms & Definitions:** (List the most important vocabulary and define them). 2. **Key People & Events:** (List the most important figures and events). 3. **Big Idea Questions:** (Create 3-5 open-ended questions that test understanding of the main concepts).`
+                    },
+                    "Quiz Question Writer": {
+                        persona: "Educational Assessment Designer",
+                        task: "Write 5 multiple-choice quiz questions.",
+                        explanation: "This is great for teachers. It specifies the format (multiple-choice) and requires the AI to identify the correct answer, saving educators time.",
+                        fields: [
+                            { id: "topic", label: "Quiz Topic", type: "text", placeholder: "e.g., The Solar System" },
+                            { id: "text", label: "Source Text for Quiz", type: "textarea", placeholder: "e.g., Our solar system consists of eight planets..." }
+                        ],
+                        skeleton: `Act as an {{persona}}. Your task is to {{task}} based on the provided source text. **Topic:** {{topic}} **Source Text:**\n{{text}}\n\n**Requirements:** - Each question must have four answer choices (A, B, C, D). - One choice must be clearly correct based on the text. - The other three choices should be plausible but incorrect distractors. - After each question, indicate the correct answer (e.g., "Correct Answer: B").`
+                    },
+                    "Concept Explainer (ELI5)": {
+                        persona: "Friendly Science Communicator",
+                        task: "Explain a complex topic in simple terms.",
+                        explanation: "ELI5 (Explain Like I'm 5) is a popular format. This prompt explicitly asks for simple analogies, which is the key to a great ELI5 explanation.",
+                        fields: [
+                            { id: "concept", label: "Complex Concept", type: "text", placeholder: "e.g., Blockchain, General Relativity, APIs" }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to explain the concept of "{{concept}}" as if you were talking to a curious 5-year-old (ELI5). **Requirements:** - Use very simple language. - Avoid jargon. - Use a relatable analogy to help explain the main idea.`
+                    }
+                },
+                "Software Development": {
+                    "Commit Message Generator": {
+                        persona: "Senior Software Engineer",
+                        task: "Write a clear and conventional commit message.",
+                        explanation: "This template enforces the conventional commit standard, making git history clean and readable. It guides the AI to structure the message correctly for automated tools and human reviewers.",
+                        fields: [
+                            { id: "commitType", label: "Type of Change", type: "text", placeholder: "e.g., feat, fix, docs, refactor" },
+                            { id: "shortDesc", label: "Short Description (50 chars max)", type: "text", placeholder: "e.g., Add user authentication endpoint" },
+                            { id: "longDesc", label: "Longer Description (Optional)", type: "textarea", placeholder: "e.g., Implemented JWT-based authentication using Passport.js. Added /login and /register routes." }
+                        ],
+                        skeleton: `Act as a {{persona}} following conventional commit standards. Your task is to {{task}}. **Commit Details:** - Type: {{commitType}} - Short Description: {{shortDesc}} - Longer Description:\n{{longDesc}}\nGenerate only the commit message itself, formatted correctly.`
+                    },
+                    "Code Commenter": {
+                        persona: "Principal Software Architect",
+                        task: "Add clear and concise comments to a block of code.",
+                        explanation: "By providing the language, the AI knows the correct comment syntax. The goal is to explain the 'why' behind the code, not just the 'what', making it invaluable for team collaboration.",
+                        fields: [
+                             { id: "language", label: "Programming Language", type: "text", placeholder: "e.g., JavaScript, Python" },
+                             { id: "codeSnippet", label: "Code Snippet to Comment", type: "textarea", placeholder: "Paste your code here..." }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}} for the following snippet of {{language}} code. Explain the purpose of the code, its inputs, and its outputs. Add the comments directly into the code. **Code:**\n\`\`\`{{language}}\n{{codeSnippet}}\n\`\`\``
+                    },
+                    "Regex Generator": {
+                        persona: "Regex (Regular Expression) Expert",
+                        task: "Generate a regular expression.",
+                        explanation: "Regex is powerful but notoriously difficult to write. This prompt offloads the complex syntax generation to the AI, allowing the user to describe the pattern in plain English.",
+                        fields: [
+                            { id: "patternDesc", label: "Describe the pattern to match", type: "textarea", placeholder: "e.g., Match a valid email address.\nMatch a phone number in the format (xxx) xxx-xxxx." }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}} that matches the following description: "{{patternDesc}}". Provide the regex and a brief explanation of how it works.`
+                    },
+                    "User Story Creator": {
+                        persona: "Agile Product Owner",
+                        task: "Write a user story in the standard format.",
+                        explanation: "This enforces the standard 'As a [user], I want [feature], so that [benefit]' format, which is crucial for agile development workflows.",
+                        fields: [
+                            { id: "userType", label: "As a...", type: "text", placeholder: "e.g., registered user" },
+                            { id: "feature", label: "I want to...", type: "text", placeholder: "e.g., be able to reset my password" },
+                            { id: "benefit", label: "So that...", type: "text", placeholder: "e.g., I can regain access to my account if I forget my password" },
+                            { id: "acceptanceCriteria", label: "Acceptance Criteria (one per line)", type: "textarea", placeholder: "e.g., User clicks 'Forgot Password'.\nUser receives an email with a reset link.\nUser can set a new password." }
+                        ],
+                        skeleton: `Act as an {{persona}}. Your task is to {{task}}. **User Story:** As a {{userType}}, I want to {{feature}}, so that {{benefit}}. **Acceptance Criteria:**\n{{acceptanceCriteria}}`
+                    },
+                    "API Documentation": {
+                        persona: "Technical Writer Specializing in API Documentation",
+                        task: "Write clear documentation for an API endpoint.",
+                        explanation: "Good documentation is critical but often overlooked. This template provides a standard structure, ensuring all necessary parts like parameters and responses are covered.",
+                        fields: [
+                            { id: "endpoint", label: "API Endpoint", type: "text", placeholder: "e.g., GET /api/users/{id}" },
+                            { id: "description", label: "Endpoint Description", type: "text", placeholder: "e.g., Retrieves a single user by their ID." },
+                            { id: "parameters", label: "Parameters (one per line)", type: "textarea", placeholder: "e.g., id (path, integer): The unique identifier for the user." },
+                            { id: "response", label: "Successful Response (200 OK) Example", type: "textarea", placeholder: "e.g., { \"id\": 1, \"name\": \"John Doe\", \"email\": \"john.doe@example.com\" }" }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}}. **Endpoint:** \`{{endpoint}}\` **Description:** {{description}} **Parameters:**\n{{parameters}}\n**Successful Response (200 OK):**\n\`\`\`json\n{{response}}\n\`\`\` Please format the output in clean Markdown.`
+                    }
+                },
+                "Personal Productivity": {
+                     "Meeting Agenda Creator": {
+                        persona: "Efficient Project Manager",
+                        task: "Create a structured agenda for a meeting.",
+                        explanation: "This prompt provides the AI with all the necessary components of a professional meeting agenda, ensuring the output is logical, time-boxed, and actionable.",
+                        fields: [
+                            { id: "meetingGoal", label: "Primary Goal of the Meeting", type: "text", placeholder: "e.g., Finalize Q3 marketing strategy" },
+                            { id: "attendees", label: "Attendees", type: "text", placeholder: "e.g., Marketing Team, CEO" },
+                            { id: "duration", label: "Meeting Duration", type: "text", placeholder: "e.g., 60 minutes" },
+                            { id: "keyTopics", label: "Key Topics (one per line)", type: "textarea", placeholder: "e.g., Review of Q2 performance\nBrainstorming Q3 campaigns\nBudget allocation" }
+                        ],
+                        skeleton: `Act as an {{persona}}. Your task is to {{task}}. **Meeting Details:** - Goal: {{meetingGoal}} - Attendees: {{attendees}} - Duration: {{duration}} **Agenda Items:**\n{{keyTopics}}\n\nPlease format the output as a clean, timed agenda, allocating appropriate time for each topic within the {{duration}} timeframe. Include a section for 'Action Items' at the end.`
+                    },
+                    "Email Responder": {
+                        persona: "Professional Communications Assistant",
+                        task: "Draft a polite and effective response to an email.",
+                        explanation: "This template is a huge time-saver. By specifying your goal (e.g., decline, accept), you give the AI a clear direction for the tone and content of the reply.",
+                        fields: [
+                            { id: "originalEmail", label: "Paste the original email text here", type: "textarea", placeholder: "Subject: Invitation to Collaborate..." },
+                            { id: "replyGoal", label: "My Goal for the Reply", type: "text", placeholder: "e.g., To politely decline due to a busy schedule" },
+                            { id: "keyPoints", label: "Key Points to Include", type: "textarea", placeholder: "e.g., Thank them for the offer.\nMention I am currently overcommitted.\nSuggest reconnecting next quarter." }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}}. **Original Email:**\n"""\n{{originalEmail}}\n"""\n\n**My Goal:** {{replyGoal}}\n\n**Key Points to Include:**\n{{keyPoints}}\n\nDraft a concise and professional email response. Start with a suitable subject line.`
+                    },
+                    "Goal Setter": {
+                        persona: "Certified Performance Coach",
+                        task: "Break down a large goal into smaller, actionable steps.",
+                        explanation: "This uses the SMART goal framework implicitly to help users turn vague ambitions into a concrete plan, which is a core tenant of productivity.",
+                        fields: [
+                            { id: "mainGoal", label: "My Main Goal", type: "text", placeholder: "e.g., Learn to code in Python" },
+                            { id: "timeframe", label: "Timeframe", type: "text", placeholder: "e.g., 3 months" },
+                            { id: "currentKnowledge", label: "My Current Knowledge Level", type: "text", placeholder: "e.g., Complete beginner, I know some basic HTML." }
+                        ],
+                        skeleton: `Act as a {{persona}}. My main goal is to {{mainGoal}} in {{timeframe}}, starting from a knowledge level of: {{currentKnowledge}}. Your task is to break this goal down into a week-by-week action plan. For each week, provide 2-3 specific, measurable, and achievable steps.`
+                    },
+                    "Decision Maker (Pros & Cons)": {
+                        persona: "Rational Decision-Making Analyst",
+                        task: "Create a pros and cons list for a difficult decision.",
+                        explanation: "This helps externalize a difficult choice, allowing for a more objective view. The prompt asks for a recommendation, which forces the AI to weigh the points.",
+                        fields: [
+                            { id: "decision", label: "The Decision I'm Facing", type: "text", placeholder: "e.g., Whether to accept a new job offer" },
+                            { id: "optionA", label: "Option A", type: "text", placeholder: "e.g., Stay at my current job" },
+                            { id: "optionB", label: "Option B", type: "text", placeholder: "e.g., Accept the new job offer" },
+                            { id: "context", label: "Important Context", type: "textarea", placeholder: "e.g., The new job offers higher pay but a longer commute. I enjoy my current team but lack growth opportunities." }
+                        ],
+                        skeleton: `Act as a {{persona}}. I need help with the following decision: {{decision}}. Based on this context: {{context}}. Your task is to create a detailed pros and cons list. **Format:** **Option A: {{optionA}}** - **Pros:** (List at least 3) - **Cons:** (List at least 3) **Option B: {{optionB}}** - **Pros:** (List at least 3) - **Cons:** (List at least 3) **Recommendation:** Based on the analysis, provide a brief recommendation.`
+                    },
+                    "Personalized Workout Plan": {
+                        persona: "Certified Personal Trainer",
+                        task: "Create a 3-day per week personalized workout plan.",
+                        explanation: "This is a great example of personalization. By providing specific constraints and goals, the user gets a much more useful and safer plan than a generic one.",
+                        fields: [
+                            { id: "fitnessGoal", label: "Primary Fitness Goal", type: "text", placeholder: "e.g., Build muscle, lose weight, improve cardio" },
+                            { id: "experience", label: "Experience Level", type: "text", placeholder: "e.g., Beginner, Intermediate, Advanced" },
+                            { id: "equipment", label: "Available Equipment", type: "textarea", placeholder: "e.g., Dumbbells, resistance bands, treadmill, bodyweight only" },
+                            { id: "time", label: "Time per session", type: "text", placeholder: "e.g., 45 minutes" }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}} for me. **My Profile:** - Goal: {{fitnessGoal}} - Experience: {{experience}} - Equipment: {{equipment}} - Time: {{time}} per session **Requirements:** - Create a plan for Day 1, Day 2, and Day 3. - For each day, list 5-6 exercises. - For each exercise, specify the number of sets and reps. - Include a brief warm-up and cool-down routine.`
+                    }
+                },
+                "Creative Writing": {
+                    "Story Idea Generator": {
+                        persona: "Bestselling Novelist",
+                        task: "Brainstorm three unique story ideas.",
+                        explanation: "This prompt uses the classic 'what if' scenario structure to spark creativity, combining disparate elements into a compelling premise.",
+                        fields: [
+                            { id: "genre", label: "Genre", type: "text", placeholder: "e.g., Sci-Fi, Fantasy, Mystery" },
+                            { id: "characterTrait", label: "A Character Trait", type: "text", placeholder: "e.g., A detective who is afraid of the dark" },
+                            { id: "keyObject", label: "A Key Object", type: "text", placeholder: "e.g., A compass that points to what you desire most" },
+                            { id: "setting", label: "A Setting", type: "text", placeholder: "e.g., A library where all the books are blank" }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}} in the {{genre}} genre. Each idea should be a single paragraph and combine the following elements in a surprising way: **Elements:** - A character with the trait: "{{characterTrait}}" - A key object: "{{keyObject}}" - A setting: "{{setting}}" Present the three ideas with clear headings.`
+                    },
+                    "Character Profile": {
+                        persona: "Character-Driven Author",
+                        task: "Create a detailed character profile.",
+                        explanation: "Goes beyond surface-level traits by asking for internal and external conflicts, which are the lifeblood of any good story.",
+                        fields: [
+                            { id: "name", label: "Character Name", type: "text", placeholder: "e.g., Kaelen" },
+                            { id: "role", label: "Role in Story", type: "text", placeholder: "e.g., Protagonist, Antagonist, Mentor" },
+                            { id: "goal", label: "Primary Goal", type: "text", placeholder: "e.g., To find their long-lost sibling" },
+                            { id: "flaw", label: "Fatal Flaw", type: "text", placeholder: "e.g., Overly trusting" }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}} for a character named {{name}}. **Details:** - Role: {{role}} - Goal: {{goal}} - Fatal Flaw: {{flaw}} **Profile Sections:** 1. **Appearance:** (Describe their physical look) 2. **Personality:** (Describe their key traits) 3. **Backstory:** (A brief summary of their past) 4. **Internal Conflict:** (What do they struggle with internally?) 5. **External Conflict:** (What force opposes them in the world?)`
+                    },
+                    "World Building Snippet": {
+                        persona: "Epic Fantasy World Builder",
+                        task: "Write a short encyclopedia entry about a unique aspect of a fictional world.",
+                        explanation: "This helps writers flesh out their settings by focusing on a single, concrete detail, making the world feel more real and lived-in.",
+                        fields: [
+                            { id: "worldName", label: "Name of the World", type: "text", placeholder: "e.g., Aerthos" },
+                            { id: "aspect", label: "Aspect to Describe", type: "text", placeholder: "e.g., The 'Sunstone' currency, The Whispering Woods, The Sky-Sailors Guild" }
+                        ],
+                        skeleton: `Act as an {{persona}}. Your task is to {{task}} for the world of {{worldName}}. **Entry Title:** {{aspect}} Write a 2-3 paragraph entry describing this aspect. Cover its history, its function or purpose in the world, and one interesting fact or rumor about it.`
+                    },
+                    "Poem Generator": {
+                        persona: "Famous Poet",
+                        task: "Write a short poem.",
+                        explanation: "Provides structure (theme, mood, poetic form) to a subjective task, giving the AI clear creative constraints to work within.",
+                        fields: [
+                            { id: "theme", label: "Theme of the Poem", type: "text", placeholder: "e.g., Autumn, Loss, The City at Night" },
+                            { id: "mood", label: "Mood", type: "text", placeholder: "e.g., Melancholy, Hopeful, Nostalgic" },
+                            { id: "form", label: "Poetic Form", type: "text", placeholder: "e.g., Haiku, Sonnet, Free Verse" }
+                        ],
+                        skeleton: `Act as a {{persona}}. Your task is to {{task}} in the form of a {{form}}. **Creative Brief:** - Theme: {{theme}} - Mood: {{mood}} The poem should be approximately 8-12 lines long.`
+                    },
+                    "Dialogue Writer": {
+                        persona: "Award-Winning Screenwriter",
+                        task: "Write a short piece of dialogue between two characters.",
+                        explanation: "Dialogue is driven by conflict. This prompt requires defining what each character wants, which is the secret to writing engaging conversations.",
+                        fields: [
+                            { id: "charA", label: "Character A Name & Goal", type: "text", placeholder: "e.g., Liam, wants to borrow the car" },
+                            { id: "charB", label: "Character B Name & Goal", type: "text", placeholder: "e.g., Chloe, doesn't want him to take it" },
+                            { id: "setting", label: "Setting", type: "text", placeholder: "e.g., In a messy kitchen over breakfast" }
+                        ],
+                        skeleton: `Act as an {{persona}}. Your task is to {{task}}. **Scene Details:** - Setting: {{setting}} - Character A: {{charA}} - Character B: {{charB}} Write a short, sharp piece of dialogue (about 10 lines back-and-forth) where the characters' conflicting goals are clear.`
+                    }
+                }
+            };
+
+
+            // --- DOM Elements ---
+            const categorySelect = document.getElementById('category-select');
+            const templateSelect = document.getElementById('template-select');
+            const dynamicForm = document.getElementById('dynamic-form');
+            const promptOutput = document.getElementById('prompt-output');
+            const copyBtn = document.getElementById('copy-btn');
+            const whyBtn = document.getElementById('why-btn');
+            const explanationContainer = document.getElementById('explanation-container');
+            const explanationText = document.getElementById('explanation-text');
+
+            // --- Functions ---
+
+            function populateCategories() {
+                categorySelect.innerHTML = '';
+                Object.keys(templates).forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categorySelect.appendChild(option);
+                });
+            }
+
+            function populateTemplates() {
+                const selectedCategory = categorySelect.value;
+                templateSelect.innerHTML = '';
+                Object.keys(templates[selectedCategory]).forEach(templateName => {
+                    const option = document.createElement('option');
+                    option.value = templateName;
+                    option.textContent = templateName;
+                    templateSelect.appendChild(option);
+                });
+            }
+
+            function generateForm() {
+                const category = categorySelect.value;
+                const templateName = templateSelect.value;
+                const template = templates[category][templateName];
+                
+                dynamicForm.innerHTML = ''; // Clear previous form
+                
+                template.fields.forEach(field => {
+                    const fieldWrapper = document.createElement('div');
+                    fieldWrapper.className = 'form-group';
+                    
+                    let input;
+                    if (field.type === 'textarea') {
+                        input = document.createElement('textarea');
+                        input.rows = 3;
+                        input.className = 'form-textarea';
+                        input.placeholder = " "; 
+                    } else {
+                        input = document.createElement('input');
+                        input.type = field.type;
+                        input.className = 'form-input';
+                        input.placeholder = " ";
+                    }
+                    input.id = field.id;
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = field.id;
+                    label.textContent = field.label;
+                    label.className = 'form-label';
+
+                    fieldWrapper.appendChild(input);
+                    fieldWrapper.appendChild(label);
+                    
+                    if (field.placeholder) {
+                        const exampleText = document.createElement('p');
+                        exampleText.className = "text-xs text-gray-400 mt-1 pl-1";
+                        exampleText.textContent = field.placeholder;
+                        fieldWrapper.appendChild(exampleText);
+                    }
+                    
+                    dynamicForm.appendChild(fieldWrapper);
+                });
+
+                updatePrompt(); 
+            }
+
+            function updatePrompt() {
+                const category = categorySelect.value;
+                const templateName = templateSelect.value;
+                if (!category || !templateName) return;
+
+                const template = templates[category][templateName];
+                let promptText = template.skeleton;
+
+                promptText = promptText.replace('{{persona}}', template.persona);
+                promptText = promptText.replace('{{task}}', template.task);
+
+                template.fields.forEach(field => {
+                    const inputElement = document.getElementById(field.id);
+                    if (inputElement) {
+                        let value = inputElement.value;
+                        if (field.type === 'textarea' && value.includes('\n')) {
+                           value = value.split('\n').filter(line => line.trim() !== '').map(line => `- ${line}`).join('\n');
+                        }
+                        promptText = promptText.replace(new RegExp(`{{${field.id}}}`, 'g'), value || `[${field.label}]`);
+                    }
+                });
+
+                promptOutput.textContent = promptText;
+            }
+            
+            function copyToClipboard() {
+                const textToCopy = promptOutput.textContent;
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = textToCopy;
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextarea);
+
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = `<span class="material-icons mr-2">check</span>Copied!`;
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                }, 2000);
+            }
+
+            function toggleExplanation() {
+                explanationContainer.classList.toggle('hidden');
+                const category = categorySelect.value;
+                const templateName = templateSelect.value;
+                const template = templates[category][templateName];
+                explanationText.textContent = template.explanation;
+            }
+
+
+            // --- Event Listeners ---
+            categorySelect.addEventListener('change', () => {
+                populateTemplates();
+                generateForm();
+            });
+            templateSelect.addEventListener('change', generateForm);
+            dynamicForm.addEventListener('input', updatePrompt);
+            copyBtn.addEventListener('click', copyToClipboard);
+            whyBtn.addEventListener('click', toggleExplanation);
+
+            // --- Initial Load ---
+            populateCategories();
+            populateTemplates();
+            generateForm();
+        });
+    </script>
+</body>
+</html>
