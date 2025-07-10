@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Buddy for Malaysian Students (Tahun 1 ke Tahun 6)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f8ff; /* Light blue background */
+        }
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+        .subject-button {
+            transition: all 0.3s ease;
+            transform: scale(1);
+        }
+        .subject-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        .subject-button.selected {
+            border-color: #2563eb; /* Blue border for selected */
+            background-color: #eff6ff; /* Light blue fill for selected */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .task-button {
+            transition: background-color 0.2s ease;
+        }
+        .task-button:hover {
+            background-color: #e0f2fe; /* Lighter blue on hover */
+        }
+        .task-button.selected {
+            background-color: #bfdbfe; /* Medium blue for selected */
+            border-color: #1d4ed8; /* Darker blue border */
+        }
+        .gradient-button {
+            background-image: linear-gradient(to right, #6366f1, #3b82f6);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .gradient-button:hover {
+            background-image: linear-gradient(to right, #4f46e5, #2563eb);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 0.75rem;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-blue-700 mb-6">
+            AI Buddy for Malaysian Students (Tahun 1 ke Tahun 6) 🇲🇾
+        </h1>
+        <p class="text-center text-gray-600 mb-8">
+            Pilih subjek, tugas, dan berikan maklumat untuk AI membantu anda belajar!
+            <br>
+            (Choose a subject, task, and provide information for AI to help you learn!)
+        </p>
+
+        <!-- Subject Selection -->
+        <div class="mb-8 p-4 bg-blue-50 rounded-xl shadow-inner">
+            <h2 class="text-xl font-semibold text-blue-600 mb-4">1. Pilih Subjek (Choose Subject)</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button id="subject-bm" class="subject-button bg-white text-blue-800 font-semibold py-3 px-4 rounded-xl border-2 border-blue-200 hover:bg-blue-100">
+                    Bahasa Melayu
+                </button>
+                <button id="subject-eng" class="subject-button bg-white text-blue-800 font-semibold py-3 px-4 rounded-xl border-2 border-blue-200 hover:bg-blue-100">
+                    English Language
+                </button>
+                <button id="subject-math" class="subject-button bg-white text-blue-800 font-semibold py-3 px-4 rounded-xl border-2 border-blue-200 hover:bg-blue-100">
+                    Matematik
+                </button>
+                <button id="subject-sci" class="subject-button bg-white text-blue-800 font-semibold py-3 px-4 rounded-xl border-2 border-blue-200 hover:bg-blue-100">
+                    Sains
+                </button>
+            </div>
+        </div>
+
+        <!-- Task Selection -->
+        <div id="task-selection-section" class="mb-8 p-4 bg-green-50 rounded-xl shadow-inner hidden">
+            <h2 class="text-xl font-semibold text-green-600 mb-4">2. Pilih Tugas (Choose Task)</h2>
+            <div id="tasks-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Tasks will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- Input Fields -->
+        <div id="input-fields-section" class="mb-8 p-4 bg-yellow-50 rounded-xl shadow-inner hidden">
+            <h2 class="text-xl font-semibold text-yellow-600 mb-4">3. Berikan Maklumat (Provide Information)</h2>
+            <div id="dynamic-inputs" class="space-y-4">
+                <!-- Dynamic input fields will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="action-buttons-section" class="mb-8 p-4 bg-purple-50 rounded-xl shadow-inner hidden">
+            <h2 class="text-xl font-semibold text-purple-600 mb-4">4. Hasilkan Prompt (Generate Prompt)</h2>
+            <button id="generate-prompt-btn" class="gradient-button text-white font-bold py-3 px-6 rounded-xl w-full">
+                Hasilkan Prompt
+            </button>
+        </div>
+
+        <!-- Generated Prompt Display -->
+        <div id="generated-prompt-section" class="mb-8 p-4 bg-indigo-50 rounded-xl shadow-inner hidden">
+            <h2 class="text-xl font-semibold text-indigo-600 mb-4">Prompt Anda (Your Prompt)</h2>
+            <div id="generated-prompt-display" class="bg-white p-4 rounded-lg border border-indigo-200 text-gray-800 text-sm italic min-h-[80px] flex items-center justify-center text-center">
+                Prompt akan dipaparkan di sini. (Prompt will appear here.)
+            </div>
+            <button id="copy-prompt-btn" class="gradient-button text-white font-bold py-2 px-4 rounded-xl mt-4 w-full">
+                Salin Prompt (Copy Prompt)
+            </button>
+        </div>
+    </div>
+
+    <!-- Custom Modal for Alerts -->
+    <div id="custom-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p id="modal-message" class="text-lg font-medium text-gray-800"></p>
+            <button id="modal-ok-button" class="gradient-button text-white font-bold py-2 px-4 rounded-xl mt-4">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Global Variables for Firebase/App ID (as per instructions) ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        // const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // Firebase is not strictly needed for this client-side prompt generator,
+        // but these variables are included as per general instructions for Canvas apps.
+
+        // --- UI Elements ---
+        const subjectButtons = document.querySelectorAll('.subject-button');
+        const taskSelectionSection = document.getElementById('task-selection-section');
+        const tasksContainer = document.getElementById('tasks-container');
+        const inputFieldsSection = document.getElementById('input-fields-section');
+        const dynamicInputs = document.getElementById('dynamic-inputs');
+        const actionButtonsSection = document.getElementById('action-buttons-section');
+        const generatePromptBtn = document.getElementById('generate-prompt-btn');
+        const generatedPromptSection = document.getElementById('generated-prompt-section');
+        const generatedPromptDisplay = document.getElementById('generated-prompt-display');
+        const copyPromptBtn = document.getElementById('copy-prompt-btn');
+        // Removed askAiBtn as per request
+        // const askAiBtn = document.getElementById('ask-ai-btn'); 
+        // Removed aiResponseSection as per request
+        // const aiResponseSection = document.getElementById('ai-response-section');
+        // const aiResponseDisplay = document.getElementById('ai-response-display');
+        // const loadingIndicator = document.getElementById('loading-indicator');
+        // const responseText = document.getElementById('response-text');
+
+        // Modal elements
+        const customModal = document.getElementById('custom-modal');
+        const closeModalButton = document.querySelector('.close-button');
+        const modalMessage = document.getElementById('modal-message');
+        const modalOkButton = document.getElementById('modal-ok-button');
+
+        // --- State Variables ---
+        let selectedSubject = null;
+        let selectedTask = null;
+
+        // --- Prompt Templates (Simplified KSSR Aligned) ---
+        // This is a simplified representation. In a full app, this would be much more extensive.
+        const promptTemplates = {
+            'Bahasa Melayu': {
+                'Tulis Cerita Pendek': {
+                    description: 'Hasilkan cerita pendek yang menarik.',
+                    inputs: [
+                        { id: 'bm-cerita-watak', label: 'Watak Utama (Main Character)', type: 'text', placeholder: 'Contoh: Seekor arnab bernama Comel' },
+                        { id: 'bm-cerita-tempat', label: 'Tempat Kejadian (Setting)', type: 'text', placeholder: 'Contoh: Di sebuah hutan yang indah' },
+                        { id: 'bm-cerita-peristiwa1', label: 'Peristiwa Penting 1 (Key Event 1)', type: 'text', placeholder: 'Contoh: Comel tersesat' },
+                        { id: 'bm-cerita-peristiwa2', label: 'Peristiwa Penting 2 (Key Event 2)', type: 'text', placeholder: 'Contoh: Bertemu kawan baru' },
+                        { id: 'bm-cerita-peristiwa3', label: 'Peristiwa Penting 3 (Key Event 3)', type: 'text', placeholder: 'Contoh: Menemui jalan pulang' },
+                        { id: 'bm-cerita-nada', label: 'Nada Cerita (Story Tone)', type: 'select', options: ['Ceria', 'Sedih', 'Menakutkan', 'Lucu'], placeholder: 'Pilih nada cerita' },
+                        { id: 'bm-cerita-panjang', label: 'Panjang Cerita (Story Length)', type: 'select', options: ['Pendek (Short)', 'Sederhana (Medium)', 'Panjang (Long)'], placeholder: 'Pilih panjang cerita' }
+                    ],
+                    template: (inputs) => `Tulis sebuah cerita pendek yang ${inputs['bm-cerita-panjang'].split(' ')[0].toLowerCase()} dengan nada ${inputs['bm-cerita-nada'].toLowerCase()}. Watak utama ialah ${inputs['bm-cerita-watak']}. Cerita ini berlaku ${inputs['bm-cerita-tempat']}. Masukkan peristiwa-peristiwa penting berikut: ${inputs['bm-cerita-peristiwa1']}, ${inputs['bm-cerita-peristiwa2']}, dan ${inputs['bm-cerita-peristiwa3']}.`
+                },
+                'Huraikan Gambar': {
+                    description: 'Terangkan apa yang ada dalam gambar.',
+                    inputs: [
+                        { id: 'bm-gambar-objek', label: 'Objek Utama (Main Objects)', type: 'textarea', placeholder: 'Contoh: Kanak-kanak bermain, pokok, rumah' },
+                        { id: 'bm-gambar-warna', label: 'Warna (Colors)', type: 'text', placeholder: 'Contoh: Merah, biru, hijau' },
+                        { id: 'bm-gambar-perasaan', label: 'Perasaan/Suasana (Feeling/Mood)', type: 'select', options: ['Gembira', 'Tenang', 'Sibuk', 'Sedih'], placeholder: 'Pilih perasaan' },
+                        { id: 'bm-gambar-tahap', label: 'Untuk Tahap (For Tahun)', type: 'select', options: ['Tahun 1', 'Tahun 2', 'Tahun 3', 'Tahun 4', 'Tahun 5', 'Tahun 6'], placeholder: 'Pilih Tahap' }
+                    ],
+                    template: (inputs) => `Huraikan sebuah gambar untuk murid ${inputs['bm-gambar-tahap']}. Gambar itu menunjukkan ${inputs['bm-gambar-objek']}. Warna-warna yang dominan ialah ${inputs['bm-gambar-warna']}. Suasana dalam gambar itu adalah ${inputs['bm-gambar-perasaan'].toLowerCase()}. Huraian perlu ringkas dan jelas.`
+                }
+            },
+            'English Language': {
+                'Write a Short Story': {
+                    description: 'Create an engaging short story.',
+                    inputs: [
+                        { id: 'eng-story-char', label: 'Main Character', type: 'text', placeholder: 'Example: A brave knight named Arthur' },
+                        { id: 'eng-story-setting', label: 'Setting', type: 'text', placeholder: 'Example: In a magical forest' },
+                        { id: 'eng-story-event1', label: 'Key Event 1', type: 'text', placeholder: 'Example: Arthur found a talking sword' },
+                        { id: 'eng-story-event2', label: 'Key Event 2', type: 'text', placeholder: 'Example: He fought a dragon' },
+                        { id: 'eng-story-event3', label: 'Key Event 3', type: 'text', placeholder: 'Example: Saved the princess' },
+                        { id: 'eng-story-tone', label: 'Story Tone', type: 'select', options: ['Happy', 'Sad', 'Scary', 'Funny'], placeholder: 'Select tone' },
+                        { id: 'eng-story-length', label: 'Story Length', type: 'select', options: ['Short', 'Medium', 'Long'], placeholder: 'Select length' }
+                    ],
+                    template: (inputs) => `Write a ${inputs['eng-story-length'].toLowerCase()} short story with a ${inputs['eng-story-tone'].toLowerCase()} tone. The main character is ${inputs['eng-story-char']}. The story takes place ${inputs['eng-story-setting']}. Include these key events: ${inputs['eng-story-event1']}, ${inputs['eng-story-event2']}, and ${inputs['eng-story-event3']}.`
+                },
+                'Describe a Picture': {
+                    description: 'Explain what is in a picture.',
+                    inputs: [
+                        { id: 'eng-pic-objects', label: 'Main Objects', type: 'textarea', placeholder: 'Example: Children playing, trees, a house' },
+                        { id: 'eng-pic-colors', label: 'Colors', type: 'text', placeholder: 'Example: Red, blue, green' },
+                        { id: 'eng-pic-feeling', label: 'Feeling/Mood', type: 'select', options: ['Joyful', 'Peaceful', 'Busy', 'Sad'], placeholder: 'Select feeling' },
+                        { id: 'eng-pic-standard', label: 'For Tahun', type: 'select', options: ['Tahun 1', 'Tahun 2', 'Tahun 3', 'Tahun 4', 'Tahun 5', 'Tahun 6'], placeholder: 'Select Tahun' }
+                    ],
+                    template: (inputs) => `Describe a picture for a ${inputs['eng-pic-standard']} student. The picture shows ${inputs['eng-pic-objects']}. The dominant colors are ${inputs['eng-pic-colors']}. The feeling or mood in the picture is ${inputs['eng-pic-feeling'].toLowerCase()}. The description should be simple and clear.`
+                }
+            },
+            'Matematik': {
+                'Selesaikan Masalah Ayat': {
+                    description: 'Selesaikan masalah matematik dalam bentuk ayat.',
+                    inputs: [
+                        { id: 'math-problem-situation', label: 'Situasi Masalah (Problem Situation)', type: 'textarea', placeholder: 'Contoh: Ali ada 5 biji epal, ibunya beri 3 biji lagi.' },
+                        { id: 'math-problem-question', label: 'Soalan (Question)', type: 'text', placeholder: 'Contoh: Berapa jumlah epal Ali sekarang?' },
+                        { id: 'math-problem-showsteps', label: 'Tunjukkan Langkah Kerja (Show Steps)', type: 'checkbox' }
+                    ],
+                    template: (inputs) => {
+                        let prompt = `Selesaikan masalah matematik berikut: "${inputs['math-problem-situation']} ${inputs['math-problem-question']}"`;
+                        if (inputs['math-problem-showsteps']) {
+                            prompt += ` Tunjukkan langkah kerja yang lengkap.`;
+                        }
+                        return prompt;
+                    }
+                },
+                'Cipta Soalan Latihan': {
+                    description: 'Hasilkan soalan latihan matematik.',
+                    inputs: [
+                        { id: 'math-q-topic', label: 'Topik (Topic)', type: 'text', placeholder: 'Contoh: Penambahan nombor bulat' },
+                        { id: 'math-q-standard', label: 'Untuk Tahap (For Tahun)', type: 'select', options: ['Tahun 1', 'Tahun 2', 'Tahun 3', 'Tahun 4', 'Tahun 5', 'Tahun 6'], placeholder: 'Pilih Tahap' },
+                        { id: 'math-q-count', label: 'Bilangan Soalan (Number of Questions)', type: 'number', min: 1, max: 10, value: 3 }
+                    ],
+                    template: (inputs) => `Cipta ${inputs['math-q-count']} soalan latihan matematik tentang ${inputs['math-q-topic']} untuk murid ${inputs['math-q-standard']}.`
+                }
+            },
+            'Sains': {
+                'Terangkan Konsep Sains': {
+                    description: 'Jelaskan konsep sains dengan mudah.',
+                    inputs: [
+                        { id: 'sci-concept-name', label: 'Nama Konsep (Concept Name)', type: 'text', placeholder: 'Contoh: Fotosintesis' },
+                        { id: 'sci-concept-standard', label: 'Untuk Tahap (For Tahun)', type: 'select', options: ['Tahun 1', 'Tahun 2', 'Tahun 3', 'Tahun 4', 'Tahun 5', 'Tahun 6'], placeholder: 'Pilih Tahap' },
+                        { id: 'sci-concept-examples', label: 'Gunakan Contoh (Use Examples)', type: 'checkbox' }
+                    ],
+                    template: (inputs) => {
+                        let prompt = `Terangkan konsep sains '${inputs['sci-concept-name']}' untuk murid ${inputs['sci-concept-standard']} dengan bahasa yang mudah difahami.`;
+                        if (inputs['sci-concept-examples']) {
+                            prompt += ` Berikan contoh-contoh dari kehidupan seharian.`;
+                        }
+                        return prompt;
+                    }
+                },
+                'Senaraikan Ciri-ciri': {
+                    description: 'Senaraikan ciri-ciri sesuatu objek/haiwan/tumbuhan.',
+                    inputs: [
+                        { id: 'sci-char-item', label: 'Objek/Haiwan/Tumbuhan (Object/Animal/Plant)', type: 'text', placeholder: 'Contoh: Kucing' },
+                        { id: 'sci-char-standard', label: 'Untuk Tahap (For Tahun)', type: 'select', options: ['Tahun 1', 'Tahun 2', 'Tahun 3', 'Tahun 4', 'Tahun 5', 'Tahun 6'], placeholder: 'Pilih Tahap' },
+                        { id: 'sci-char-count', label: 'Bilangan Ciri (Number of Characteristics)', type: 'number', min: 3, max: 10, value: 5 }
+                    ],
+                    template: (inputs) => `Senaraikan ${inputs['sci-char-count']} ciri-ciri utama bagi ${inputs['sci-char-item']} untuk murid ${inputs['sci-char-standard']}.`
+                }
+            }
+        };
+
+        // --- Functions for UI Management ---
+
+        function showModal(message) {
+            modalMessage.textContent = message;
+            customModal.style.display = 'flex'; // Use flex to center
+        }
+
+        function hideModal() {
+            customModal.style.display = 'none';
+        }
+
+        function resetUI() {
+            selectedSubject = null;
+            selectedTask = null;
+            subjectButtons.forEach(btn => btn.classList.remove('selected'));
+            taskSelectionSection.classList.add('hidden');
+            tasksContainer.innerHTML = '';
+            inputFieldsSection.classList.add('hidden');
+            dynamicInputs.innerHTML = '';
+            actionButtonsSection.classList.add('hidden');
+            generatedPromptSection.classList.add('hidden');
+            // aiResponseSection.classList.add('hidden'); // Removed as per request
+            generatedPromptDisplay.textContent = 'Prompt akan dipaparkan di sini. (Prompt will appear here.)';
+            // responseText.textContent = 'Jawapan AI akan dipaparkan di sini. (AI response will appear here.)'; // Removed as per request
+            // loadingIndicator.classList.add('hidden'); // Removed as per request
+        }
+
+        function selectSubject(subjectName, button) {
+            resetUI(); // Reset everything when a new subject is selected
+            selectedSubject = subjectName;
+            button.classList.add('selected');
+            displayTasks(subjectName);
+            taskSelectionSection.classList.remove('hidden');
+        }
+
+        function displayTasks(subjectName) {
+            tasksContainer.innerHTML = '';
+            const tasks = promptTemplates[subjectName];
+            for (const taskName in tasks) {
+                const taskInfo = tasks[taskName];
+                const button = document.createElement('button');
+                button.classList.add('task-button', 'bg-white', 'text-green-800', 'font-semibold', 'py-3', 'px-4', 'rounded-xl', 'border-2', 'border-green-200', 'hover:bg-green-100', 'text-left');
+                button.innerHTML = `
+                    <p class="font-bold">${taskName}</p>
+                    <p class="text-sm text-gray-600">${taskInfo.description}</p>
+                `;
+                button.addEventListener('click', () => selectTask(taskName, button));
+                tasksContainer.appendChild(button);
+            }
+        }
+
+        function selectTask(taskName, button) {
+            // Remove 'selected' from all task buttons
+            document.querySelectorAll('.task-button').forEach(btn => btn.classList.remove('selected'));
+            // Add 'selected' to the clicked button
+            button.classList.add('selected');
+
+            selectedTask = taskName;
+            displayInputFields(selectedSubject, selectedTask);
+            inputFieldsSection.classList.remove('hidden');
+            actionButtonsSection.classList.remove('hidden');
+            generatedPromptSection.classList.add('hidden'); // Hide prompt/response sections on new task
+            // aiResponseSection.classList.add('hidden'); // Removed as per request
+            generatedPromptDisplay.textContent = 'Prompt akan dipaparkan di sini. (Prompt will appear here.)';
+            // responseText.textContent = 'Jawapan AI akan dipaparkan di sini. (AI response will appear here.)'; // Removed as per request
+            // loadingIndicator.classList.add('hidden'); // Removed as per request
+        }
+
+        function displayInputFields(subjectName, taskName) {
+            dynamicInputs.innerHTML = '';
+            const inputs = promptTemplates[subjectName][taskName].inputs;
+
+            inputs.forEach(input => {
+                const div = document.createElement('div');
+                div.classList.add('mb-3');
+
+                const label = document.createElement('label');
+                label.setAttribute('for', input.id);
+                label.classList.add('block', 'text-gray-700', 'text-sm', 'font-bold', 'mb-2');
+                label.textContent = input.label;
+                div.appendChild(label);
+
+                let inputElement;
+                if (input.type === 'textarea') {
+                    inputElement = document.createElement('textarea');
+                    inputElement.rows = 3;
+                    inputElement.classList.add('shadow-sm', 'appearance-none', 'border', 'rounded-lg', 'w-full', 'py-2', 'px-3', 'text-gray-700', 'leading-tight', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-300', 'focus:border-transparent');
+                } else if (input.type === 'select') {
+                    inputElement = document.createElement('select');
+                    inputElement.classList.add('shadow-sm', 'appearance-none', 'border', 'rounded-lg', 'w-full', 'py-2', 'px-3', 'text-gray-700', 'leading-tight', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-300', 'focus:border-transparent');
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = input.placeholder || `Pilih ${input.label.split(' ')[0]}`;
+                    defaultOption.disabled = true;
+                    defaultOption.selected = true;
+                    inputElement.appendChild(defaultOption);
+                    input.options.forEach(optionText => {
+                        const option = document.createElement('option');
+                        option.value = optionText;
+                        option.textContent = optionText;
+                        inputElement.appendChild(option);
+                    });
+                } else if (input.type === 'checkbox') {
+                    inputElement = document.createElement('input');
+                    inputElement.type = 'checkbox';
+                    inputElement.classList.add('mr-2', 'leading-tight');
+                    div.classList.add('flex', 'items-center'); // Adjust div for checkbox layout
+                } else if (input.type === 'number') {
+                    inputElement = document.createElement('input');
+                    inputElement.type = 'number';
+                    inputElement.min = input.min || 1;
+                    inputElement.max = input.max || 100;
+                    inputElement.value = input.value || 1;
+                    inputElement.classList.add('shadow-sm', 'appearance-none', 'border', 'rounded-lg', 'w-full', 'py-2', 'px-3', 'text-gray-700', 'leading-tight', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-300', 'focus:border-transparent');
+                }
+                else {
+                    inputElement = document.createElement('input');
+                    inputElement.type = input.type;
+                    inputElement.classList.add('shadow-sm', 'appearance-none', 'border', 'rounded-lg', 'w-full', 'py-2', 'px-3', 'text-gray-700', 'leading-tight', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-300', 'focus:border-transparent');
+                }
+
+                inputElement.id = input.id;
+                if (input.placeholder && input.type !== 'select') {
+                    inputElement.placeholder = input.placeholder;
+                }
+
+                div.appendChild(inputElement);
+                dynamicInputs.appendChild(div);
+            });
+        }
+
+        function getInputsValue() {
+            const inputsData = {};
+            const inputs = promptTemplates[selectedSubject][selectedTask].inputs;
+            let allInputsValid = true;
+
+            inputs.forEach(input => {
+                const element = document.getElementById(input.id);
+                if (input.type === 'checkbox') {
+                    inputsData[input.id] = element.checked;
+                } else {
+                    inputsData[input.id] = element.value.trim();
+                    if (inputsData[input.id] === '' && input.type !== 'checkbox') { // Check for empty string for non-checkboxes
+                        allInputsValid = false;
+                        element.classList.add('border-red-500'); // Highlight empty fields
+                    } else {
+                        element.classList.remove('border-red-500');
+                    }
+                }
+            });
+
+            if (!allInputsValid) {
+                showModal('Sila isi semua maklumat yang diperlukan! (Please fill in all required information!)');
+                return null;
+            }
+            return inputsData;
+        }
+
+        function generatePrompt() {
+            if (!selectedSubject || !selectedTask) {
+                showModal('Sila pilih subjek dan tugas dahulu! (Please select a subject and task first!)');
+                return;
+            }
+
+            const inputs = getInputsValue();
+            if (!inputs) return; // Validation failed
+
+            const templateFunction = promptTemplates[selectedSubject][selectedTask].template;
+            const generated = templateFunction(inputs);
+
+            generatedPromptDisplay.textContent = generated;
+            generatedPromptSection.classList.remove('hidden');
+            // aiResponseSection.classList.add('hidden'); // Removed as per request
+            // responseText.textContent = 'Jawapan AI akan dipaparkan di sini. (AI response will appear here.)'; // Removed as per request
+            // loadingIndicator.classList.add('hidden'); // Removed as per request
+        }
+
+        // Removed askAI function as per request
+        /*
+        async function askAI() {
+            const prompt = generatedPromptDisplay.textContent;
+            if (!prompt || prompt === 'Prompt akan dipaparkan di sini. (Prompt will appear here.)') {
+                showModal('Sila hasilkan prompt dahulu! (Please generate a prompt first!)');
+                return;
+            }
+
+            aiResponseSection.classList.remove('hidden');
+            responseText.textContent = '';
+            loadingIndicator.classList.remove('hidden');
+            aiResponseDisplay.classList.add('flex-col'); // Adjust for spinner and text
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // Canvas will automatically provide this in runtime. DO NOT ADD any API key validation.
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API Error: ${response.status} - ${errorData.error.message || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    responseText.textContent = text;
+                } else {
+                    responseText.textContent = 'Maaf, tidak dapat menjana jawapan. Sila cuba lagi. (Sorry, could not generate a response. Please try again.)';
+                    console.error('Unexpected API response structure:', result);
+                }
+            } catch (error) {
+                console.error('Error asking AI:', error);
+                responseText.textContent = `Ralat: ${error.message}. Sila cuba lagi. (Error: ${error.message}. Please try again.)`;
+                showModal(`Ralat: ${error.message}. Sila cuba lagi. (Error: ${error.message}. Please try again.)`);
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                aiResponseDisplay.classList.remove('flex-col');
+            }
+        }
+        */
+
+        function copyPrompt() {
+            const promptText = generatedPromptDisplay.textContent;
+            if (promptText && promptText !== 'Prompt akan dipaparkan di sini. (Prompt will appear here.)') {
+                // Using document.execCommand('copy') for better compatibility in iframes
+                const textarea = document.createElement('textarea');
+                textarea.value = promptText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showModal('Prompt disalin! (Prompt copied!)');
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                    showModal('Gagal menyalin prompt. Sila salin secara manual. (Failed to copy prompt. Please copy manually.)');
+                }
+                document.body.removeChild(textarea);
+            } else {
+                showModal('Tiada prompt untuk disalin. (No prompt to copy.)');
+            }
+        }
+
+        // --- Event Listeners ---
+        subjectButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                subjectButtons.forEach(btn => btn.classList.remove('selected'));
+                button.classList.add('selected');
+                selectSubject(button.textContent.trim(), button);
+            });
+        });
+
+        generatePromptBtn.addEventListener('click', generatePrompt);
+        copyPromptBtn.addEventListener('click', copyPrompt);
+        // Removed event listener for askAiBtn
+        // askAiBtn.addEventListener('click', askAI); 
+
+        closeModalButton.addEventListener('click', hideModal);
+        modalOkButton.addEventListener('click', hideModal);
+        window.addEventListener('click', (event) => {
+            if (event.target === customModal) {
+                hideModal();
+            }
+        });
+
+        // Initial UI state
+        resetUI();
+
+    </script>
+</body>
+</html>
