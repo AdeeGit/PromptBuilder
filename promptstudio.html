@@ -59,11 +59,6 @@
             box-shadow: 0 4px 0 0 #374151, 0 6px 12px rgba(0,0,0,0.2);
             @apply focus:ring-gray-400;
         }
-        .btn-ai {
-            background: linear-gradient(45deg, #f472b6 0%, #a78bfa 100%);
-            box-shadow: 0 4px 0 0 #c026d3, 0 6px 12px rgba(0,0,0,0.2);
-            @apply focus:ring-pink-400;
-        }
         .btn:hover {
             transform: translateY(-2px);
         }
@@ -72,7 +67,6 @@
             box-shadow: 0 2px 0 0 #0d9488, 0 4px 8px rgba(0,0,0,0.2);
         }
         .btn-secondary:active { box-shadow: 0 2px 0 0 #374151, 0 4px 8px rgba(0,0,0,0.2); }
-        .btn-ai:active { box-shadow: 0 2px 0 0 #c026d3, 0 4px 8px rgba(0,0,0,0.2); }
 
 
         #prompt-output {
@@ -80,38 +74,17 @@
             word-wrap: break-word;
         }
         
-        /* Loading Modal */
-        #loading-modal {
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .loader {
-            border-top-color: #3498db;
-            animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body class="text-gray-900">
-
-    <!-- Loading Modal -->
-    <div id="loading-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
-        <div class="flex flex-col items-center justify-center bg-white p-8 rounded-lg shadow-xl">
-            <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24 mb-4"></div>
-            <h2 class="text-center text-xl font-semibold text-gray-700">AI is thinking...</h2>
-            <p id="loading-message" class="text-center text-gray-500">Please wait a moment.</p>
-        </div>
-    </div>
-
 
     <div class="container mx-auto p-4 md:p-8">
         <!-- Header -->
         <header class="text-center mb-12">
             <h1 class="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">
-                Prompt Studio ✨
+                Prompt Studio
             </h1>
-            <p class="mt-3 text-lg text-gray-700">Visually craft and improve AI prompts in seconds.</p>
+            <p class="mt-3 text-lg text-gray-700">Visually craft perfect AI prompts in seconds.</p>
         </header>
 
         <!-- Main Content -->
@@ -154,12 +127,9 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
+                    <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
                         <button id="copy-btn" class="btn btn-primary w-full"><span class="material-icons mr-2">content_copy</span>Copy</button>
                         <button id="why-btn" class="btn btn-secondary w-full"><span class="material-icons mr-2">lightbulb</span>Why it works</button>
-                    </div>
-                     <div class="mb-6">
-                        <button id="improve-btn" class="btn btn-ai w-full"><span class="material-icons mr-2">auto_awesome</span>Improve Prompt with AI</button>
                     </div>
 
                     <!-- Explanation Section -->
@@ -181,8 +151,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- DATA STORE for Templates (Expanded) ---
-            // FIX: Changed 'const' to 'let' to allow reassignment later.
-            let templates = {
+            const templates = {
                 "Marketing & Sales": {
                     "Product Description": {
                         persona: "Expert Ecommerce Copywriter",
@@ -190,32 +159,9 @@
                         explanation: "By assigning the 'Expert Copywriter' persona, we tell the AI to use persuasive language. Providing clear features and a target audience ensures the output is focused and relevant.",
                         fields: [
                             { id: "productName", label: "Product Name", type: "text", placeholder: "e.g., The Nomad's Brew Mug" },
-                            { id: "productDetails", label: "Product Details & Materials", type: "textarea", placeholder: "e.g., A reusable, 12oz insulated coffee mug made from recycled stainless steel with a ceramic lining.", aiSuggest: true, suggestContext: "productName" },
+                            { id: "productDetails", label: "Product Details & Materials", type: "textarea", placeholder: "e.g., A reusable, 12oz insulated coffee mug made from recycled stainless steel with a ceramic lining." },
                             { id: "targetAudience", label: "Target Audience", type: "text", placeholder: "e.g., Eco-conscious millennials who love travel" },
-                            { id: "keyFeatures", label: "Key Features (one per line)", type: "textarea", placeholder: "e.g., Keeps drinks hot for 12 hours\nLeak-proof lid\nBPA-free\nFits in car cup holders", aiSuggest: true, suggestContext: "productName" },
-                            { id: "tone", label: "Tone", type: "text", placeholder: "e.g., Enthusiastic and inspiring" }
-                        ],
-                        skeleton: `Act as an {{persona}}. Your task is to {{task}}. **Product Information:** - Name: {{productName}} - Details: {{productDetails}} **Audience & Tone:** - Target Audience: {{targetAudience}} - Desired Tone: {{tone}} **Core Requirements:** - Highlight these key features clearly in the description:\n{{keyFeatures}}\n- The final output should be a single block of text. Do not use bullet points in the final description itself.`
-                    },
-                    // ... other Marketing & Sales templates
-                },
-                // ... other categories
-            };
-            
-            // NOTE: To keep the response concise, I'm only showing the modification to one template.
-            // The full template object from the previous turn is assumed to be here.
-            // The following lines are just to re-populate the object for this script.
-            const allTemplates = {
-                "Marketing & Sales": {
-                    "Product Description": {
-                        persona: "Expert Ecommerce Copywriter",
-                        task: "Write a compelling and persuasive product description.",
-                        explanation: "By assigning the 'Expert Copywriter' persona, we tell the AI to use persuasive language. Providing clear features and a target audience ensures the output is focused and relevant.",
-                        fields: [
-                            { id: "productName", label: "Product Name", type: "text", placeholder: "e.g., The Nomad's Brew Mug" },
-                            { id: "productDetails", label: "Product Details & Materials", type: "textarea", placeholder: "e.g., A reusable, 12oz insulated coffee mug made from recycled stainless steel with a ceramic lining.", aiSuggest: true, suggestContext: "productName" },
-                            { id: "targetAudience", label: "Target Audience", type: "text", placeholder: "e.g., Eco-conscious millennials who love travel" },
-                            { id: "keyFeatures", label: "Key Features (one per line)", type: "textarea", placeholder: "e.g., Keeps drinks hot for 12 hours\nLeak-proof lid\nBPA-free\nFits in car cup holders", aiSuggest: true, suggestContext: "productName" },
+                            { id: "keyFeatures", label: "Key Features (one per line)", type: "textarea", placeholder: "e.g., Keeps drinks hot for 12 hours\nLeak-proof lid\nBPA-free\nFits in car cup holders" },
                             { id: "tone", label: "Tone", type: "text", placeholder: "e.g., Enthusiastic and inspiring" }
                         ],
                         skeleton: `Act as an {{persona}}. Your task is to {{task}}. **Product Information:** - Name: {{productName}} - Details: {{productDetails}} **Audience & Tone:** - Target Audience: {{targetAudience}} - Desired Tone: {{tone}} **Core Requirements:** - Highlight these key features clearly in the description:\n{{keyFeatures}}\n- The final output should be a single block of text. Do not use bullet points in the final description itself.`
@@ -226,7 +172,7 @@
                         explanation: "This prompt works well because it requests a specific number of ideas (10) and defines the brand's core values, giving the AI creative yet relevant boundaries to work within.",
                         fields: [
                             { id: "companyName", label: "Company/Product Name", type: "text", placeholder: "e.g., QuickNote AI" },
-                            { id: "coreValues", label: "Core Values / What it does", type: "textarea", placeholder: "e.g., An AI-powered note-taking app that organizes thoughts instantly using mind maps.", aiSuggest: true, suggestContext: "companyName" },
+                            { id: "coreValues", label: "Core Values / What it does", type: "textarea", placeholder: "e.g., An AI-powered note-taking app that organizes thoughts instantly using mind maps." },
                             { id: "targetAudience", label: "Target Audience", type: "text", placeholder: "e.g., Busy professionals, students, and writers" },
                             { id: "tone", label: "Desired Tone", type: "text", placeholder: "e.g., Modern, witty, and intelligent" }
                         ],
@@ -281,7 +227,7 @@
                             { id: "topic", label: "Lesson Topic", type: "text", placeholder: "e.g., The Process of Photosynthesis" },
                             { id: "gradeLevel", label: "Grade Level", type: "text", placeholder: "e.g., 10th Grade" },
                             { id: "duration", label: "Lesson Duration", type: "text", placeholder: "e.g., 45 minutes" },
-                            { id: "learningObjectives", label: "Learning Objectives (one per line)", type: "textarea", placeholder: "e.g., Define photosynthesis.\nIdentify the reactants and products.", aiSuggest: true, suggestContext: "topic" }
+                            { id: "learningObjectives", label: "Learning Objectives (one per line)", type: "textarea", placeholder: "e.g., Define photosynthesis.\nIdentify the reactants and products." }
                         ],
                         skeleton: `Act as a {{persona}}. Your primary task is to {{task}}. **Context:** - Subject: {{subject}} - Topic: {{topic}} - Grade Level: {{gradeLevel}} - Lesson Duration: {{duration}} **Core Requirements:** The lesson plan must be structured to achieve the following learning objectives:\n{{learningObjectives}} **Format:** Please structure the output in Markdown with the following sections: 1. **Lesson Title** 2. **Learning Objectives** 3. **Materials Needed** 4. **Lesson Procedure** (a step-by-step timeline) 5. **Assessment** 6. **Differentiation** (for struggling and advanced students).`
                     },
@@ -292,9 +238,9 @@
                         fields: [
                             { id: "topic", label: "Essay Topic", type: "text", placeholder: "e.g., The impact of social media on modern politics" },
                             { id: "thesis", label: "Thesis Statement Idea", type: "text", placeholder: "e.g., Social media has both democratized and polarized political discourse." },
-                            { id: "point1", label: "Main Point for Body Paragraph 1", type: "text", placeholder: "e.g., Increased citizen engagement and access to information.", aiSuggest: true, suggestContext: "topic" },
-                            { id: "point2", label: "Main Point for Body Paragraph 2", type: "text", placeholder: "e.g., The rise of misinformation and filter bubbles.", aiSuggest: true, suggestContext: "topic" },
-                            { id: "point3", label: "Main Point for Body Paragraph 3", type: "text", placeholder: "e.g., The role of algorithms in shaping public opinion.", aiSuggest: true, suggestContext: "topic" }
+                            { id: "point1", label: "Main Point for Body Paragraph 1", type: "text", placeholder: "e.g., Increased citizen engagement and access to information." },
+                            { id: "point2", label: "Main Point for Body Paragraph 2", type: "text", placeholder: "e.g., The rise of misinformation and filter bubbles." },
+                            { id: "point3", label: "Main Point for Body Paragraph 3", type: "text", placeholder: "e.g., The role of algorithms in shaping public opinion." }
                         ],
                         skeleton: `Act as a {{persona}}. Your task is to {{task}} on the topic of "{{topic}}". **Outline Structure:** **I. Introduction** - A. Hook - B. Background Information - C. Thesis Statement: "{{thesis}}" **II. Body Paragraph 1** - A. Topic Sentence: {{point1}} - B. Supporting Evidence 1 - C. Supporting Evidence 2 **III. Body Paragraph 2** - A. Topic Sentence: {{point2}} - B. Supporting Evidence 1 - C. Supporting Evidence 2 **IV. Body Paragraph 3** - A. Topic Sentence: {{point3}} - B. Supporting Evidence 1 - C. Supporting Evidence 2 **V. Conclusion** - A. Restate Thesis - B. Summarize Main Points - C. Concluding Thought. Flesh out each section briefly.`
                     },
@@ -504,7 +450,6 @@
                     }
                 }
             };
-            templates = allTemplates;
 
 
             // --- DOM Elements ---
@@ -514,53 +459,8 @@
             const promptOutput = document.getElementById('prompt-output');
             const copyBtn = document.getElementById('copy-btn');
             const whyBtn = document.getElementById('why-btn');
-            const improveBtn = document.getElementById('improve-btn');
             const explanationContainer = document.getElementById('explanation-container');
             const explanationText = document.getElementById('explanation-text');
-            const loadingModal = document.getElementById('loading-modal');
-            const loadingMessage = document.getElementById('loading-message');
-
-            // --- Gemini API Helper ---
-            async function callGeminiAPI(prompt, message) {
-                loadingMessage.textContent = message || "Please wait a moment.";
-                loadingModal.classList.remove('hidden');
-
-                const apiKey = ""; // Left empty for Canvas environment
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                
-                const payload = {
-                    contents: [{ role: "user", parts: [{ text: prompt }] }]
-                };
-
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`API Error: ${response.statusText}`);
-                    }
-
-                    const result = await response.json();
-                    
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        return result.candidates[0].content.parts[0].text;
-                    } else {
-                        throw new Error("Invalid response structure from API.");
-                    }
-                } catch (error) {
-                    console.error("Gemini API call failed:", error);
-                    alert(`An error occurred: ${error.message}. Please check the console for details.`);
-                    return null;
-                } finally {
-                    loadingModal.classList.add('hidden');
-                }
-            }
-
 
             // --- Functions ---
 
@@ -625,61 +525,11 @@
                         fieldWrapper.appendChild(exampleText);
                     }
                     
-                    if (field.aiSuggest) {
-                        const aiButton = document.createElement('button');
-                        aiButton.innerHTML = `<span class="material-icons text-sm mr-1">auto_awesome</span>Suggest with AI`;
-                        aiButton.className = "text-xs text-pink-500 hover:text-pink-700 font-semibold mt-1 flex items-center";
-                        aiButton.onclick = (e) => {
-                            e.preventDefault();
-                            handleAiSuggest(field.id, field.suggestContext, field.label);
-                        };
-                        fieldWrapper.appendChild(aiButton);
-                    }
-
                     dynamicForm.appendChild(fieldWrapper);
                 });
 
                 updatePrompt(); 
             }
-
-            async function handleAiSuggest(targetFieldId, contextFieldId, fieldLabel) {
-                const contextElement = document.getElementById(contextFieldId);
-                if (!contextElement || !contextElement.value) {
-                    alert(`Please fill in the "${contextElement.nextElementSibling.textContent}" field first to provide context for the AI.`);
-                    return;
-                }
-                const contextValue = contextElement.value;
-                const suggestionPrompt = `Based on the following topic: "${contextValue}", brainstorm a list of 3-5 ideas for "${fieldLabel}". Return only the ideas as a bulleted list.`;
-                
-                const suggestions = await callGeminiAPI(suggestionPrompt, `Generating ideas for ${fieldLabel}...`);
-                
-                if (suggestions) {
-                    const targetElement = document.getElementById(targetFieldId);
-                    // Clean up the response, removing asterisks and dashes
-                    const cleanedSuggestions = suggestions.replace(/[\*\-]/g, '').trim();
-                    targetElement.value = cleanedSuggestions;
-                    targetElement.dispatchEvent(new Event('input')); // Trigger update
-                }
-            }
-
-            async function handleImprovePrompt() {
-                const currentPrompt = promptOutput.textContent;
-                const improvementPrompt = `You are a world-class prompt engineer. Your task is to analyze the following user-created prompt and refine it for maximum clarity, detail, and effectiveness for a large language model. Add specific details where they are lacking, structure the prompt logically, and ensure the instructions are unambiguous.
-
-Here is the user's prompt:
-"""
-${currentPrompt}
-"""
-
-Return only the improved prompt.`;
-
-                const improvedPrompt = await callGeminiAPI(improvementPrompt, "Improving your prompt...");
-
-                if (improvedPrompt) {
-                    promptOutput.textContent = improvedPrompt;
-                }
-            }
-
 
             function updatePrompt() {
                 const category = categorySelect.value;
@@ -741,7 +591,6 @@ Return only the improved prompt.`;
             dynamicForm.addEventListener('input', updatePrompt);
             copyBtn.addEventListener('click', copyToClipboard);
             whyBtn.addEventListener('click', toggleExplanation);
-            improveBtn.addEventListener('click', handleImprovePrompt);
 
             // --- Initial Load ---
             populateCategories();
